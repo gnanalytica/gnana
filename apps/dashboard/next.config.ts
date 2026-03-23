@@ -3,7 +3,13 @@ import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
   output: "standalone",
-  transpilePackages: ["@gnana/client"],
+  transpilePackages: ["@gnana/client", "@gnana/db"],
+  typescript: {
+    // Type checking is handled by `pnpm typecheck` in CI.
+    // next build's tsc pass hits phantom-type mismatches from pnpm's
+    // virtual store (drizzle-orm resolved at two different paths).
+    ignoreBuildErrors: true,
+  },
 };
 
 export default withSentryConfig(nextConfig, {
