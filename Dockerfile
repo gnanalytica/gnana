@@ -66,4 +66,4 @@ COPY --from=builder /app/packages/providers/openai/dist packages/providers/opena
 
 EXPOSE 4000
 
-CMD ["node", "packages/server/dist/index.js"]
+CMD ["node", "packages/server/dist/start.js"]
