@@ -1,29 +1,37 @@
 import { Hono } from "hono";
-import { eq } from "drizzle-orm";
-import type { Database } from "@gnana/db";
-import { connectors, connectorTools } from "@gnana/db";
+import { eq, and, connectors, connectorTools, type Database } from "@gnana/db";
+import { requireRole } from "../middleware/rbac.js";
 
 export function connectorRoutes(db: Database) {
   const app = new Hono();
 
-  // List connectors
-  app.get("/", async (c) => {
-    const result = await db.select().from(connectors);
+  // List connectors — viewer+
+  app.get("/", requireRole("viewer"), async (c) => {
+    const workspaceId = c.get("workspaceId");
+    const result = await db
+      .select()
+      .from(connectors)
+      .where(eq(connectors.workspaceId, workspaceId));
     return c.json(result);
   });
 
-  // Get connector by ID
-  app.get("/:id", async (c) => {
+  // Get connector by ID — viewer+
+  app.get("/:id", requireRole("viewer"), async (c) => {
     const id = c.req.param("id");
-    const result = await db.select().from(connectors).where(eq(connectors.id, id));
+    const workspaceId = c.get("workspaceId");
+    const result = await db
+      .select()
+      .from(connectors)
+      .where(and(eq(connectors.id, id), eq(connectors.workspaceId, workspaceId)));
     if (result.length === 0) {
       return c.json({ error: "Connector not found" }, 404);
     }
     return c.json(result[0]);
   });
 
-  // Register connector
-  app.post("/", async (c) => {
+  // Register connector — admin+
+  app.post("/", requireRole("admin"), async (c) => {
+    const workspaceId = c.get("workspaceId");
     const body = await c.req.json();
     const result = await db
       .insert(connectors)
@@ -33,28 +41,32 @@ export function connectorRoutes(db: Database) {
         authType: body.authType,
         credentials: body.credentials,
         config: body.config ?? {},
-        workspaceId: body.workspaceId,
+        workspaceId,
       })
       .returning();
     return c.json(result[0], 201);
   });
 
-  // Get connector tools
-  app.get("/:id/tools", async (c) => {
+  // Get connector tools — viewer+
+  app.get("/:id/tools", requireRole("viewer"), async (c) => {
     const id = c.req.param("id");
     const result = await db.select().from(connectorTools).where(eq(connectorTools.connectorId, id));
     return c.json(result);
   });
 
-  // Delete connector
-  app.delete("/:id", async (c) => {
+  // Delete connector — admin+
+  app.delete("/:id", requireRole("admin"), async (c) => {
     const id = c.req.param("id");
-    await db.update(connectors).set({ enabled: false }).where(eq(connectors.id, id));
+    const workspaceId = c.get("workspaceId");
+    await db
+      .update(connectors)
+      .set({ enabled: false })
+      .where(and(eq(connectors.id, id), eq(connectors.workspaceId, workspaceId)));
     return c.json({ ok: true });
   });
 
-  // Test connector
-  app.post("/:id/test", async (c) => {
+  // Test connector — admin+
+  app.post("/:id/test", requireRole("admin"), async (c) => {
     // Placeholder — connector testing will be implemented with connector system
     return c.json({ ok: true, message: "Connection test not yet implemented" });
   });

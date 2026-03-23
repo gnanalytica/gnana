@@ -1,20 +1,21 @@
 import { Hono } from "hono";
-import { eq } from "drizzle-orm";
-import type { Database } from "@gnana/db";
-import { providers } from "@gnana/db";
+import { eq, and, providers, type Database } from "@gnana/db";
+import { requireRole } from "../middleware/rbac.js";
 
 export function providerRoutes(db: Database) {
   const app = new Hono();
 
-  // List providers
-  app.get("/", async (c) => {
-    const result = await db.select().from(providers);
+  // List providers — viewer+
+  app.get("/", requireRole("viewer"), async (c) => {
+    const workspaceId = c.get("workspaceId");
+    const result = await db.select().from(providers).where(eq(providers.workspaceId, workspaceId));
     // Strip API keys from response
     return c.json(result.map((p) => ({ ...p, apiKey: "***" })));
   });
 
-  // Register provider
-  app.post("/", async (c) => {
+  // Register provider — admin+
+  app.post("/", requireRole("admin"), async (c) => {
+    const workspaceId = c.get("workspaceId");
     const body = await c.req.json();
     const result = await db
       .insert(providers)
@@ -24,16 +25,20 @@ export function providerRoutes(db: Database) {
         apiKey: body.apiKey,
         baseUrl: body.baseUrl,
         config: body.config ?? {},
-        workspaceId: body.workspaceId,
+        workspaceId,
       })
       .returning();
     return c.json({ ...result[0], apiKey: "***" }, 201);
   });
 
-  // Delete provider
-  app.delete("/:id", async (c) => {
+  // Delete provider — admin+
+  app.delete("/:id", requireRole("admin"), async (c) => {
     const id = c.req.param("id");
-    await db.update(providers).set({ enabled: false }).where(eq(providers.id, id));
+    const workspaceId = c.get("workspaceId");
+    await db
+      .update(providers)
+      .set({ enabled: false })
+      .where(and(eq(providers.id, id), eq(providers.workspaceId, workspaceId)));
     return c.json({ ok: true });
   });
 

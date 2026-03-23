@@ -17,6 +17,8 @@ import { Separator } from "@/components/ui/separator";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarItem } from "./sidebar-item";
 import { ThemeToggle } from "./theme-toggle";
+import { WorkspaceSwitcher } from "./workspace-switcher";
+import { UserMenu } from "./user-menu";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Home", href: "/" },
@@ -72,14 +74,8 @@ export function Sidebar() {
           isCollapsed ? "w-12" : "w-[220px]",
         )}
       >
-        {/* Logo */}
-        <div
-          className={cn("flex items-center h-14 shrink-0", isCollapsed ? "justify-center" : "px-3")}
-        >
-          <span className="text-primary font-bold text-lg whitespace-nowrap">
-            {isCollapsed ? "\u2B21" : "\u2B21 Gnana"}
-          </span>
-        </div>
+        {/* Workspace Switcher */}
+        <WorkspaceSwitcher isCollapsed={isCollapsed} />
 
         {/* Navigation */}
         <nav
@@ -100,6 +96,7 @@ export function Sidebar() {
         <div className={cn("shrink-0 pb-3", isCollapsed ? "px-1" : "px-2")}>
           <Separator className="mb-2" />
           <div className={cn("flex flex-col gap-1", isCollapsed ? "items-center" : "")}>
+            <UserMenu isCollapsed={isCollapsed} />
             <ThemeToggle isCollapsed={isCollapsed} />
 
             {/* Pin/Unpin button — visible when expanded */}

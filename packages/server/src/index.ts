@@ -9,7 +9,10 @@ import { agentRoutes } from "./routes/agents.js";
 import { runRoutes } from "./routes/runs.js";
 import { connectorRoutes } from "./routes/connectors.js";
 import { providerRoutes } from "./routes/providers.js";
+import { workspaceRoutes } from "./routes/workspaces.js";
 import { connectionManager } from "./ws.js";
+import { authMiddleware } from "./middleware/auth.js";
+import { workspaceMiddleware } from "./middleware/workspace.js";
 
 if (process.env.SENTRY_DSN) {
   Sentry.init({
@@ -77,7 +80,7 @@ function createApp(db: Database, events: EventBus) {
   // Middleware
   app.use("*", cors());
 
-  // Root route
+  // Public routes (no auth required)
   app.get("/", (c) =>
     c.json({
       name: "Gnana API",
@@ -87,7 +90,6 @@ function createApp(db: Database, events: EventBus) {
     }),
   );
 
-  // Health check
   app.get("/health", (c) => c.json({ status: "ok" }));
 
   // Sentry error handler
@@ -96,11 +98,19 @@ function createApp(db: Database, events: EventBus) {
     return c.json({ error: "Internal server error" }, 500);
   });
 
-  // API routes
-  app.route("/api/agents", agentRoutes(db));
-  app.route("/api/runs", runRoutes(db, events));
-  app.route("/api/connectors", connectorRoutes(db));
-  app.route("/api/providers", providerRoutes(db));
+  // Protected API routes — auth + workspace resolution
+  const api = new Hono();
+  api.use("*", authMiddleware(db));
+  api.use("*", workspaceMiddleware(db));
+
+  // Mount route groups
+  api.route("/agents", agentRoutes(db));
+  api.route("/runs", runRoutes(db, events));
+  api.route("/connectors", connectorRoutes(db));
+  api.route("/providers", providerRoutes(db));
+  api.route("/workspaces", workspaceRoutes(db));
+
+  app.route("/api", api);
 
   return app;
 }

@@ -1,31 +1,41 @@
 import { Hono } from "hono";
-import { eq, desc } from "drizzle-orm";
-import type { Database } from "@gnana/db";
-import { runs, runLogs } from "@gnana/db";
+import { eq, and, desc, runs, runLogs, type Database } from "@gnana/db";
 import type { EventBus } from "@gnana/core";
+import { requireRole } from "../middleware/rbac.js";
 
 export function runRoutes(db: Database, events: EventBus) {
   const app = new Hono();
 
-  // List runs
-  app.get("/", async (c) => {
+  // List runs — viewer+
+  app.get("/", requireRole("viewer"), async (c) => {
+    const workspaceId = c.get("workspaceId");
     const limit = Number(c.req.query("limit") ?? "50");
-    const result = await db.select().from(runs).orderBy(desc(runs.createdAt)).limit(limit);
+    const result = await db
+      .select()
+      .from(runs)
+      .where(eq(runs.workspaceId, workspaceId))
+      .orderBy(desc(runs.createdAt))
+      .limit(limit);
     return c.json(result);
   });
 
-  // Get run by ID
-  app.get("/:id", async (c) => {
+  // Get run by ID — viewer+
+  app.get("/:id", requireRole("viewer"), async (c) => {
     const id = c.req.param("id");
-    const result = await db.select().from(runs).where(eq(runs.id, id));
+    const workspaceId = c.get("workspaceId");
+    const result = await db
+      .select()
+      .from(runs)
+      .where(and(eq(runs.id, id), eq(runs.workspaceId, workspaceId)));
     if (result.length === 0) {
       return c.json({ error: "Run not found" }, 404);
     }
     return c.json(result[0]);
   });
 
-  // Trigger a new run
-  app.post("/", async (c) => {
+  // Trigger a new run — editor+
+  app.post("/", requireRole("editor"), async (c) => {
+    const workspaceId = c.get("workspaceId");
     const body = await c.req.json();
     const result = await db
       .insert(runs)
@@ -34,7 +44,7 @@ export function runRoutes(db: Database, events: EventBus) {
         status: "queued",
         triggerType: body.triggerType ?? "manual",
         triggerData: body.payload ?? {},
-        workspaceId: body.workspaceId,
+        workspaceId,
       })
       .returning();
     const run = result[0]!;
@@ -42,14 +52,15 @@ export function runRoutes(db: Database, events: EventBus) {
     return c.json(run, 201);
   });
 
-  // Approve run
-  app.post("/:id/approve", async (c) => {
+  // Approve run — editor+
+  app.post("/:id/approve", requireRole("editor"), async (c) => {
     const id = c.req.param("id");
+    const workspaceId = c.get("workspaceId");
     const body = await c.req.json().catch(() => ({}));
     const result = await db
       .update(runs)
       .set({ status: "approved", updatedAt: new Date() })
-      .where(eq(runs.id, id))
+      .where(and(eq(runs.id, id), eq(runs.workspaceId, workspaceId)))
       .returning();
     if (result.length === 0) {
       return c.json({ error: "Run not found" }, 404);
@@ -58,14 +69,15 @@ export function runRoutes(db: Database, events: EventBus) {
     return c.json(result[0]);
   });
 
-  // Reject run
-  app.post("/:id/reject", async (c) => {
+  // Reject run — editor+
+  app.post("/:id/reject", requireRole("editor"), async (c) => {
     const id = c.req.param("id");
+    const workspaceId = c.get("workspaceId");
     const body = await c.req.json().catch(() => ({}));
     const result = await db
       .update(runs)
       .set({ status: "rejected", updatedAt: new Date() })
-      .where(eq(runs.id, id))
+      .where(and(eq(runs.id, id), eq(runs.workspaceId, workspaceId)))
       .returning();
     if (result.length === 0) {
       return c.json({ error: "Run not found" }, 404);
@@ -74,13 +86,14 @@ export function runRoutes(db: Database, events: EventBus) {
     return c.json(result[0]);
   });
 
-  // Cancel run
-  app.post("/:id/cancel", async (c) => {
+  // Cancel run — editor+
+  app.post("/:id/cancel", requireRole("editor"), async (c) => {
     const id = c.req.param("id");
+    const workspaceId = c.get("workspaceId");
     const result = await db
       .update(runs)
       .set({ status: "failed", error: "Cancelled by user", updatedAt: new Date() })
-      .where(eq(runs.id, id))
+      .where(and(eq(runs.id, id), eq(runs.workspaceId, workspaceId)))
       .returning();
     if (result.length === 0) {
       return c.json({ error: "Run not found" }, 404);
@@ -88,8 +101,8 @@ export function runRoutes(db: Database, events: EventBus) {
     return c.json(result[0]);
   });
 
-  // Get run logs
-  app.get("/:id/logs", async (c) => {
+  // Get run logs — viewer+
+  app.get("/:id/logs", requireRole("viewer"), async (c) => {
     const id = c.req.param("id");
     const result = await db.select().from(runLogs).where(eq(runLogs.runId, id));
     return c.json(result);

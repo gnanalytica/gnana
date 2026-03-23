@@ -1,29 +1,37 @@
 import { Hono } from "hono";
-import { eq } from "drizzle-orm";
-import type { Database } from "@gnana/db";
-import { agents } from "@gnana/db";
+import { eq, and, agents, type Database } from "@gnana/db";
+import { requireRole } from "../middleware/rbac.js";
 
 export function agentRoutes(db: Database) {
   const app = new Hono();
 
-  // List agents
-  app.get("/", async (c) => {
-    const result = await db.select().from(agents).where(eq(agents.enabled, true));
+  // List agents — viewer+
+  app.get("/", requireRole("viewer"), async (c) => {
+    const workspaceId = c.get("workspaceId");
+    const result = await db
+      .select()
+      .from(agents)
+      .where(and(eq(agents.workspaceId, workspaceId), eq(agents.enabled, true)));
     return c.json(result);
   });
 
-  // Get agent by ID
-  app.get("/:id", async (c) => {
+  // Get agent by ID — viewer+
+  app.get("/:id", requireRole("viewer"), async (c) => {
     const id = c.req.param("id");
-    const result = await db.select().from(agents).where(eq(agents.id, id));
+    const workspaceId = c.get("workspaceId");
+    const result = await db
+      .select()
+      .from(agents)
+      .where(and(eq(agents.id, id), eq(agents.workspaceId, workspaceId)));
     if (result.length === 0) {
       return c.json({ error: "Agent not found" }, 404);
     }
     return c.json(result[0]);
   });
 
-  // Create agent
-  app.post("/", async (c) => {
+  // Create agent — editor+
+  app.post("/", requireRole("editor"), async (c) => {
+    const workspaceId = c.get("workspaceId");
     const body = await c.req.json();
     const result = await db
       .insert(agents)
@@ -36,15 +44,16 @@ export function agentRoutes(db: Database) {
         triggersConfig: body.triggersConfig ?? [],
         approval: body.approval ?? "required",
         maxToolRounds: body.maxToolRounds ?? 10,
-        workspaceId: body.workspaceId,
+        workspaceId,
       })
       .returning();
     return c.json(result[0], 201);
   });
 
-  // Update agent
-  app.put("/:id", async (c) => {
+  // Update agent — editor+
+  app.put("/:id", requireRole("editor"), async (c) => {
     const id = c.req.param("id");
+    const workspaceId = c.get("workspaceId");
     const body = await c.req.json();
     const result = await db
       .update(agents)
@@ -52,7 +61,7 @@ export function agentRoutes(db: Database) {
         ...body,
         updatedAt: new Date(),
       })
-      .where(eq(agents.id, id))
+      .where(and(eq(agents.id, id), eq(agents.workspaceId, workspaceId)))
       .returning();
     if (result.length === 0) {
       return c.json({ error: "Agent not found" }, 404);
@@ -60,10 +69,14 @@ export function agentRoutes(db: Database) {
     return c.json(result[0]);
   });
 
-  // Delete agent
-  app.delete("/:id", async (c) => {
+  // Delete agent — editor+
+  app.delete("/:id", requireRole("editor"), async (c) => {
     const id = c.req.param("id");
-    await db.update(agents).set({ enabled: false }).where(eq(agents.id, id));
+    const workspaceId = c.get("workspaceId");
+    await db
+      .update(agents)
+      .set({ enabled: false })
+      .where(and(eq(agents.id, id), eq(agents.workspaceId, workspaceId)));
     return c.json({ ok: true });
   });
 
