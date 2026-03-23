@@ -28,8 +28,18 @@ jobs:
           node-version: 22
           cache: pnpm
 
+      - name: Cache Turbo
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: turbo-${{ github.sha }}
+          restore-keys: turbo-
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Format check
+        run: pnpm format:check
 
       - name: Typecheck
         run: pnpm typecheck
@@ -39,7 +49,3 @@ jobs:
 
       - name: Test
         run: pnpm test
-        continue-on-error: true
-
-      - name: Format check
-        run: pnpm format:check
