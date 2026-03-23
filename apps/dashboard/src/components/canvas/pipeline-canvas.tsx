@@ -91,11 +91,41 @@ function createDefaultNodes(): Node[] {
 
 function createDefaultEdges(): Edge[] {
   return [
-    { id: "e-trigger-analyze", source: "trigger", target: "analyze", animated: true, style: { stroke: "var(--phase-trigger)" } },
-    { id: "e-analyze-plan", source: "analyze", target: "plan", animated: true, style: { stroke: "var(--phase-analyze)" } },
-    { id: "e-plan-approve", source: "plan", target: "approve", animated: true, style: { stroke: "var(--phase-plan)" } },
-    { id: "e-approve-execute", source: "approve", target: "execute", animated: true, style: { stroke: "var(--phase-approve)" } },
-    { id: "e-execute-output", source: "execute", target: "output", animated: true, style: { stroke: "var(--phase-execute)" } },
+    {
+      id: "e-trigger-analyze",
+      source: "trigger",
+      target: "analyze",
+      animated: true,
+      style: { stroke: "var(--phase-trigger)" },
+    },
+    {
+      id: "e-analyze-plan",
+      source: "analyze",
+      target: "plan",
+      animated: true,
+      style: { stroke: "var(--phase-analyze)" },
+    },
+    {
+      id: "e-plan-approve",
+      source: "plan",
+      target: "approve",
+      animated: true,
+      style: { stroke: "var(--phase-plan)" },
+    },
+    {
+      id: "e-approve-execute",
+      source: "approve",
+      target: "execute",
+      animated: true,
+      style: { stroke: "var(--phase-approve)" },
+    },
+    {
+      id: "e-execute-output",
+      source: "execute",
+      target: "output",
+      animated: true,
+      style: { stroke: "var(--phase-execute)" },
+    },
   ];
 }
 
@@ -161,10 +191,7 @@ export function PipelineCanvas({ initialNodes, initialEdges, onChange }: Pipelin
   const onConnect = useCallback(
     (params: Connection) => {
       setEdges((eds) =>
-        addEdge(
-          { ...params, animated: true, style: { stroke: "hsl(var(--primary))" } },
-          eds,
-        ),
+        addEdge({ ...params, animated: true, style: { stroke: "hsl(var(--primary))" } }, eds),
       );
     },
     [setEdges],

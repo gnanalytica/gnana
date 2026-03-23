@@ -71,10 +71,7 @@ export default function NewAgentPage() {
   if (phase === "canvas" && pipelineSpec) {
     return (
       <div className="h-screen w-full">
-        <SplitCanvas
-          initialNodes={pipelineSpec.nodes}
-          initialEdges={pipelineSpec.edges}
-        />
+        <SplitCanvas initialNodes={pipelineSpec.nodes} initialEdges={pipelineSpec.edges} />
       </div>
     );
   }

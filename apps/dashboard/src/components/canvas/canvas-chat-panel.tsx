@@ -26,7 +26,7 @@ export function CanvasChatPanel({
       id: "welcome",
       role: "assistant",
       content:
-        "I can help you modify your pipeline. Try things like:\n• \"Add a Slack notification after the execute step\"\n• \"Use Claude Opus for the analysis node\"\n• \"Add error handling with a condition node\"",
+        'I can help you modify your pipeline. Try things like:\n• "Add a Slack notification after the execute step"\n• "Use Claude Opus for the analysis node"\n• "Add error handling with a condition node"',
     },
   ]);
   const [input, setInput] = useState("");

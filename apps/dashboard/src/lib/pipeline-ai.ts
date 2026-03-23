@@ -19,14 +19,23 @@ export async function generatePipelineFromPrompt(prompt: string): Promise<Pipeli
   const hasBranching =
     lower.includes("if ") || lower.includes("condition") || lower.includes("branch");
   const hasParallel =
-    lower.includes("parallel") || lower.includes("simultaneous") || lower.includes("at the same time");
+    lower.includes("parallel") ||
+    lower.includes("simultaneous") ||
+    lower.includes("at the same time");
   const hasLoop =
-    lower.includes("loop") || lower.includes("repeat") || lower.includes("each") || lower.includes("every");
+    lower.includes("loop") ||
+    lower.includes("repeat") ||
+    lower.includes("each") ||
+    lower.includes("every");
   const hasSlack = lower.includes("slack");
-  const hasGithub = lower.includes("github") || lower.includes("pr") || lower.includes("pull request");
+  const hasGithub =
+    lower.includes("github") || lower.includes("pr") || lower.includes("pull request");
   const hasEmail = lower.includes("email");
   const hasData =
-    lower.includes("data") || lower.includes("database") || lower.includes("sql") || lower.includes("query");
+    lower.includes("data") ||
+    lower.includes("database") ||
+    lower.includes("sql") ||
+    lower.includes("query");
 
   // Build nodes dynamically
   const nodes: PipelineSpec["nodes"] = [];
@@ -213,5 +222,7 @@ function deriveName(prompt: string): string {
   if (lower.includes("report")) return "Report Generator";
   // Fallback: capitalize first few words
   const words = prompt.split(/\s+/).slice(0, 4);
-  return words.map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ") + " Agent";
+  return (
+    words.map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ") + " Agent"
+  );
 }

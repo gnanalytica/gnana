@@ -1,14 +1,7 @@
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  ClipboardList,
-  Code2,
-  FileBarChart,
-  Headphones,
-  Database,
-  Sparkles,
-} from "lucide-react";
+import { ClipboardList, Code2, FileBarChart, Headphones, Database, Sparkles } from "lucide-react";
 
 const TEMPLATES = [
   {

@@ -28,16 +28,13 @@ export function SplitCanvas({ initialNodes, initialEdges }: SplitCanvasProps) {
     setEdges(newEdges);
   }, []);
 
-  const handleChatPipelineUpdate = useCallback(
-    (newNodes: NodeSpec[], newEdges: EdgeSpec[]) => {
-      setNodes(newNodes);
-      setEdges(newEdges);
-      nodesRef.current = newNodes;
-      edgesRef.current = newEdges;
-      setCanvasKey((k) => k + 1);
-    },
-    [],
-  );
+  const handleChatPipelineUpdate = useCallback((newNodes: NodeSpec[], newEdges: EdgeSpec[]) => {
+    setNodes(newNodes);
+    setEdges(newEdges);
+    nodesRef.current = newNodes;
+    edgesRef.current = newEdges;
+    setCanvasKey((k) => k + 1);
+  }, []);
 
   return (
     <div className="flex h-full w-full">
