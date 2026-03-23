@@ -24,6 +24,12 @@
     --input: 240 5.9% 90%;
     --ring: 263 70% 72%;
     --radius: 0.5rem;
+
+    --phase-trigger: #a78bfa;
+    --phase-analyze: #60a5fa;
+    --phase-plan: #34d399;
+    --phase-approve: #f59e0b;
+    --phase-execute: #f472b6;
   }
 
   .dark {
@@ -46,6 +52,12 @@
     --border: 240 3.7% 15.9%;
     --input: 240 3.7% 15.9%;
     --ring: 263 70% 72%;
+
+    --phase-trigger: #a78bfa;
+    --phase-analyze: #60a5fa;
+    --phase-plan: #34d399;
+    --phase-approve: #f59e0b;
+    --phase-execute: #f472b6;
   }
 }
 
