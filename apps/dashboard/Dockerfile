@@ -29,6 +29,10 @@ RUN pnpm install --frozen-lockfile
 COPY packages/ packages/
 COPY apps/dashboard/ apps/dashboard/
 
+# Set NEXT_PUBLIC_* env vars at build time (baked into the Next.js bundle)
+ARG NEXT_PUBLIC_GNANA_API_URL=https://ai-api.gnanalytica.com
+ENV NEXT_PUBLIC_GNANA_API_URL=$NEXT_PUBLIC_GNANA_API_URL
+
 # Build all packages via Turborepo
 RUN pnpm build
 
