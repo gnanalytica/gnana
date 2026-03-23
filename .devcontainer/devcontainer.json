@@ -1,0 +1,37 @@
+{
+  "name": "Gnana Dev",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:22",
+  "features": {
+    "ghcr.io/devcontainers-extra/features/pnpm:1": {
+      "version": "9.15.4"
+    },
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "postCreateCommand": "pnpm install",
+  "postStartCommand": "echo '✅ Gnana dev environment ready. Run: pnpm dev'",
+  "forwardPorts": [4000],
+  "portsAttributes": {
+    "4000": {
+      "label": "Gnana Server",
+      "onAutoForward": "notify"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true,
+        "typescript.preferences.importModuleSpecifier": "non-relative"
+      },
+      "extensions": [
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint",
+        "bradlc.vscode-tailwindcss",
+        "mikestead.dotenv"
+      ]
+    },
+    "codespaces": {
+      "openFiles": ["README.md"]
+    }
+  }
+}

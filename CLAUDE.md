@@ -29,11 +29,12 @@ Provider-agnostic AI agent framework with a no-code builder. See `docs/DESIGN.md
 - **Docker**: Production builds only — developers use native `pnpm dev`, never Docker locally
 - **Staged deploys**: PR → preview app, main → staging, git tag → production
 
-## Local Dev Setup
+## Dev Setup
 
-- `pnpm install && pnpm dev` — works on Windows, macOS, and Linux
+- **GitHub Codespaces (recommended)**: Click "Code" → "Open in Codespace" — zero local setup
+- **Local**: `pnpm install && pnpm dev` — works on Windows, macOS, and Linux
 - No Docker required for development
-- Postgres via Neon (recommended), Postgres.app (macOS), or local install
+- Postgres via Neon free tier (recommended) — cloud DB, no local install
 - Copy `.env.example` to `.env`, add a DATABASE_URL and at least one LLM API key
 
 ## Conventions
