@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Copy, AlertTriangle } from "lucide-react";
+import { Plus, Copy, AlertTriangle, Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -14,65 +14,59 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-
-interface ApiKeyRow {
-  id: string;
-  name: string;
-  key: string;
-  created: string;
-  lastUsed: string;
-}
-
-const placeholderKeys: ApiKeyRow[] = [
-  {
-    id: "key-1",
-    name: "Production Key",
-    key: "gnana_pk_a1b2c3d4...",
-    created: "2026-03-01",
-    lastUsed: "2026-03-23",
-  },
-  {
-    id: "key-2",
-    name: "Development Key",
-    key: "gnana_dk_e5f6g7h8...",
-    created: "2026-03-10",
-    lastUsed: "2026-03-22",
-  },
-];
+import { useApiKeys, type CreatedKey } from "@/lib/hooks/use-api-keys";
 
 export default function ApiKeysPage() {
-  const [keys, setKeys] = useState<ApiKeyRow[]>(placeholderKeys);
+  const { keys, isLoading, error, createKey, deleteKey } = useApiKeys();
   const [generateOpen, setGenerateOpen] = useState(false);
   const [newKeyName, setNewKeyName] = useState("");
-  const [generatedKey, setGeneratedKey] = useState<string | null>(null);
+  const [createdKey, setCreatedKey] = useState<CreatedKey | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
   const [revokeId, setRevokeId] = useState<string | null>(null);
+  const [isRevoking, setIsRevoking] = useState(false);
+  const [copied, setCopied] = useState(false);
 
-  const handleGenerate = () => {
-    const fakeKey = `gnana_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
-    setGeneratedKey(fakeKey);
+  const handleGenerate = async () => {
+    try {
+      setIsCreating(true);
+      const result = await createKey(newKeyName.trim());
+      setCreatedKey(result);
+    } catch {
+      // Error is handled by the hook
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   const handleCloseGenerate = () => {
-    if (generatedKey && newKeyName.trim()) {
-      setKeys((prev) => [
-        ...prev,
-        {
-          id: `key-${Date.now()}`,
-          name: newKeyName,
-          key: generatedKey.slice(0, 16) + "...",
-          created: new Date().toISOString().slice(0, 10),
-          lastUsed: "Never",
-        },
-      ]);
-    }
     setGenerateOpen(false);
     setNewKeyName("");
-    setGeneratedKey(null);
+    setCreatedKey(null);
+    setCopied(false);
   };
 
-  const handleRevoke = (id: string) => {
-    setKeys((prev) => prev.filter((k) => k.id !== id));
-    setRevokeId(null);
+  const handleCopy = async (text: string) => {
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleRevoke = async (id: string) => {
+    try {
+      setIsRevoking(true);
+      await deleteKey(id);
+    } finally {
+      setIsRevoking(false);
+      setRevokeId(null);
+    }
+  };
+
+  const formatDate = (dateStr: string) => {
+    return new Date(dateStr).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
   };
 
   return (
@@ -85,73 +79,98 @@ export default function ApiKeysPage() {
         </div>
         <Button onClick={() => setGenerateOpen(true)}>
           <Plus className="h-4 w-4" />
-          Generate Key
+          Create API Key
         </Button>
       </div>
 
-      {/* Keys Table */}
-      <div className="rounded-md border">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b bg-muted/50">
-              <th className="text-left p-3 font-medium">Name</th>
-              <th className="text-left p-3 font-medium">Key</th>
-              <th className="text-left p-3 font-medium">Created</th>
-              <th className="text-left p-3 font-medium">Last Used</th>
-              <th className="text-left p-3 font-medium">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {keys.map((apiKey) => (
-              <tr key={apiKey.id} className="border-b last:border-b-0">
-                <td className="p-3 font-medium">{apiKey.name}</td>
-                <td className="p-3">
-                  <Badge variant="secondary" className="font-mono text-xs">
-                    {apiKey.key}
-                  </Badge>
-                </td>
-                <td className="p-3 text-muted-foreground">{apiKey.created}</td>
-                <td className="p-3 text-muted-foreground">{apiKey.lastUsed}</td>
-                <td className="p-3">
-                  {revokeId === apiKey.id ? (
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-destructive">Are you sure?</span>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => handleRevoke(apiKey.id)}
-                      >
-                        Yes, revoke
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => setRevokeId(null)}>
-                        Cancel
-                      </Button>
-                    </div>
-                  ) : (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-destructive hover:text-destructive"
-                      onClick={() => setRevokeId(apiKey.id)}
-                    >
-                      Revoke
-                    </Button>
-                  )}
-                </td>
-              </tr>
-            ))}
-            {keys.length === 0 && (
-              <tr>
-                <td colSpan={5} className="p-6 text-center text-muted-foreground">
-                  No API keys. Generate one to get started.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      {/* Error state */}
+      {error && (
+        <div className="rounded-md bg-destructive/10 p-4 text-sm text-destructive">{error}</div>
+      )}
 
-      {/* Generate Key Dialog */}
+      {/* Loading state */}
+      {isLoading ? (
+        <div className="flex items-center justify-center p-12">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      ) : (
+        /* Keys Table */
+        <div className="rounded-md border">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-muted/50">
+                <th className="text-left p-3 font-medium">Name</th>
+                <th className="text-left p-3 font-medium">Key</th>
+                <th className="text-left p-3 font-medium">Created</th>
+                <th className="text-left p-3 font-medium">Last Used</th>
+                <th className="text-left p-3 font-medium">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {keys.map((apiKey) => (
+                <tr key={apiKey.id} className="border-b last:border-b-0">
+                  <td className="p-3 font-medium">{apiKey.name}</td>
+                  <td className="p-3">
+                    <Badge variant="secondary" className="font-mono text-xs">
+                      {apiKey.prefix}...
+                    </Badge>
+                  </td>
+                  <td className="p-3 text-muted-foreground">{formatDate(apiKey.createdAt)}</td>
+                  <td className="p-3 text-muted-foreground">
+                    {apiKey.lastUsedAt ? formatDate(apiKey.lastUsedAt) : "Never"}
+                  </td>
+                  <td className="p-3">
+                    {revokeId === apiKey.id ? (
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-destructive">Are you sure?</span>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          disabled={isRevoking}
+                          onClick={() => handleRevoke(apiKey.id)}
+                        >
+                          {isRevoking ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            "Yes, revoke"
+                          )}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          disabled={isRevoking}
+                          onClick={() => setRevokeId(null)}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => setRevokeId(apiKey.id)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5 mr-1" />
+                        Revoke
+                      </Button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+              {keys.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="p-6 text-center text-muted-foreground">
+                    No API keys. Create one to get started.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Create Key Dialog */}
       <Dialog
         open={generateOpen}
         onOpenChange={(open) => {
@@ -161,28 +180,27 @@ export default function ApiKeysPage() {
       >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Generate API Key</DialogTitle>
+            <DialogTitle>Create API Key</DialogTitle>
             <DialogDescription>Create a new API key for programmatic access.</DialogDescription>
           </DialogHeader>
 
-          {generatedKey ? (
+          {createdKey ? (
             <div className="space-y-4">
               <div className="flex items-center gap-2 p-3 rounded-md bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800">
                 <AlertTriangle className="h-4 w-4 text-yellow-600 shrink-0" />
                 <p className="text-xs text-yellow-800 dark:text-yellow-200">
-                  Copy this key now. You will not be able to see it again.
+                  This is the only time you will see this key. Copy it now and store it securely.
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <Input readOnly value={generatedKey} className="font-mono text-sm" />
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => navigator.clipboard.writeText(generatedKey)}
-                >
+                <Input readOnly value={createdKey.key} className="font-mono text-sm" />
+                <Button variant="outline" size="icon" onClick={() => handleCopy(createdKey.key)}>
                   <Copy className="h-4 w-4" />
                 </Button>
               </div>
+              {copied && (
+                <p className="text-xs text-green-600 dark:text-green-400">Copied to clipboard</p>
+              )}
               <DialogFooter>
                 <Button onClick={handleCloseGenerate} className="w-full">
                   Done
@@ -201,8 +219,19 @@ export default function ApiKeysPage() {
                 />
               </div>
               <DialogFooter>
-                <Button onClick={handleGenerate} disabled={!newKeyName.trim()} className="w-full">
-                  Generate
+                <Button
+                  onClick={handleGenerate}
+                  disabled={!newKeyName.trim() || isCreating}
+                  className="w-full"
+                >
+                  {isCreating ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      Creating...
+                    </>
+                  ) : (
+                    "Create Key"
+                  )}
                 </Button>
               </DialogFooter>
             </div>

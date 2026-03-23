@@ -11,6 +11,7 @@ import { connectorRoutes } from "./routes/connectors.js";
 import { providerRoutes } from "./routes/providers.js";
 import { workspaceRoutes } from "./routes/workspaces.js";
 import { apiKeyRoutes } from "./routes/api-keys.js";
+import { publicInviteRoutes, protectedInviteRoutes } from "./routes/invites.js";
 import { connectionManager } from "./ws.js";
 import { authMiddleware } from "./middleware/auth.js";
 import { workspaceMiddleware } from "./middleware/workspace.js";
@@ -92,6 +93,15 @@ function createApp(db: Database, events: EventBus) {
   );
 
   app.get("/health", (c) => c.json({ status: "ok" }));
+
+  // Public invite routes — view invite details without auth
+  app.route("/api/invites", publicInviteRoutes(db));
+
+  // Auth-only routes (no workspace middleware) — accepting invites
+  const authOnly = new Hono();
+  authOnly.use("*", authMiddleware(db));
+  authOnly.route("/invites", protectedInviteRoutes(db));
+  app.route("/api/auth-actions", authOnly);
 
   // Sentry error handler
   app.onError((err, c) => {

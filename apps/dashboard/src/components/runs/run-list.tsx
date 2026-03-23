@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import type { Run } from "@/types";
 import type { RunFilters } from "./run-filters";
@@ -70,8 +71,35 @@ export function RunList({ filters, runs = [], isLoading = false }: RunListProps)
   if (isLoading) {
     return (
       <Card>
-        <CardContent className="py-12 text-center">
-          <p className="text-muted-foreground">Loading...</p>
+        <CardContent className="p-0">
+          {/* Header row */}
+          <div className="hidden sm:grid grid-cols-[auto_1fr_auto_auto_auto_auto_auto] gap-4 items-center px-6 py-3 border-b border-border text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            <span className="w-2" />
+            <span>Agent</span>
+            <span>Status</span>
+            <span>Trigger</span>
+            <span>Started</span>
+            <span>Duration</span>
+            <span className="text-right">Tokens</span>
+          </div>
+          <div className="divide-y divide-border">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div
+                key={i}
+                className="grid grid-cols-[auto_1fr_auto_auto_auto_auto_auto] gap-4 items-center px-6 py-4"
+              >
+                <Skeleton className="h-2 w-2 rounded-full" />
+                <div className="min-w-0">
+                  <Skeleton className="h-4 w-28" />
+                </div>
+                <Skeleton className="h-5 w-20 rounded-full" />
+                <Skeleton className="h-5 w-16 rounded-full" />
+                <Skeleton className="hidden sm:block h-3 w-16" />
+                <Skeleton className="hidden sm:block h-3 w-14" />
+                <Skeleton className="hidden sm:block h-3 w-12" />
+              </div>
+            ))}
+          </div>
         </CardContent>
       </Card>
     );

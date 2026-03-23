@@ -6,6 +6,7 @@ import { Bot, Play, Clock, Plus, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { useAgents } from "@/lib/hooks/use-agents";
 import { useRuns } from "@/lib/hooks/use-runs";
@@ -115,7 +116,9 @@ export default function DashboardHome() {
             <Bot className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{isLoading ? "..." : stats.activeAgents}</div>
+            <div className="text-3xl font-bold">
+              {isLoading ? <Skeleton className="h-8 w-16" /> : stats.activeAgents}
+            </div>
           </CardContent>
         </Card>
 
@@ -125,7 +128,9 @@ export default function DashboardHome() {
             <Play className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{isLoading ? "..." : stats.runsToday}</div>
+            <div className="text-3xl font-bold">
+              {isLoading ? <Skeleton className="h-8 w-16" /> : stats.runsToday}
+            </div>
           </CardContent>
         </Card>
 
@@ -138,7 +143,7 @@ export default function DashboardHome() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-amber-500">
-              {isLoading ? "..." : stats.awaitingApproval}
+              {isLoading ? <Skeleton className="h-8 w-16" /> : stats.awaitingApproval}
             </div>
           </CardContent>
         </Card>
@@ -159,7 +164,19 @@ export default function DashboardHome() {
         <Card>
           <CardContent className="p-0">
             {isLoading ? (
-              <div className="px-6 py-8 text-center text-muted-foreground">Loading...</div>
+              <div className="divide-y divide-border">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="flex items-center gap-4 px-6 py-4">
+                    <Skeleton className="h-2.5 w-2.5 rounded-full" />
+                    <div className="flex-1 min-w-0">
+                      <Skeleton className="h-4 w-32" />
+                    </div>
+                    <Skeleton className="h-5 w-20 rounded-full" />
+                    <Skeleton className="h-5 w-16 rounded-full" />
+                    <Skeleton className="h-3 w-16" />
+                  </div>
+                ))}
+              </div>
             ) : recentRuns.length === 0 ? (
               <div className="px-6 py-8 text-center text-muted-foreground">No recent runs</div>
             ) : (

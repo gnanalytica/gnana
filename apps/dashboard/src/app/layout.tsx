@@ -9,7 +9,15 @@ const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mon
 
 export const metadata: Metadata = {
   title: "Gnana — AI Agent Dashboard",
-  description: "Build, manage, and monitor AI agents",
+  description: "Build, manage, and monitor AI agents with a no-code builder",
+  icons: {
+    icon: "/favicon.svg",
+  },
+  openGraph: {
+    title: "Gnana — AI Agent Dashboard",
+    description: "Build, manage, and monitor AI agents with a no-code builder",
+    type: "website",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -5,7 +5,8 @@ import Link from "next/link";
 import { Plus, Search, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { AgentCard } from "@/components/agents/agent-card";
 import { useAgents } from "@/lib/hooks/use-agents";
 
@@ -67,8 +68,20 @@ export default function AgentsPage() {
 
       {/* Loading State */}
       {isLoading ? (
-        <div className="flex items-center justify-center py-20 text-muted-foreground">
-          Loading...
+        <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Card key={i}>
+              <CardHeader className="pb-3">
+                <Skeleton className="h-5 w-32" />
+                <Skeleton className="h-4 w-48 mt-2" />
+              </CardHeader>
+              <CardContent className="flex flex-wrap gap-2">
+                <Skeleton className="h-5 w-20 rounded-full" />
+                <Skeleton className="h-5 w-16 rounded-full" />
+                <Skeleton className="h-5 w-14 rounded-full" />
+              </CardContent>
+            </Card>
+          ))}
         </div>
       ) : /* Agent Grid or Empty State */
       filteredAgents.length > 0 ? (

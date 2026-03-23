@@ -68,8 +68,62 @@ export function connectorRoutes(db: Database) {
 
   // Test connector — admin+
   app.post("/:id/test", requireRole("admin"), async (c) => {
-    // Placeholder — connector testing will be implemented with connector system
-    return c.json({ ok: true, message: "Connection test not yet implemented" });
+    const id = c.req.param("id");
+    const workspaceId = c.get("workspaceId");
+
+    const result = await db
+      .select()
+      .from(connectors)
+      .where(and(eq(connectors.id, id), eq(connectors.workspaceId, workspaceId)))
+      .limit(1);
+
+    const connector = result[0];
+    if (!connector) return c.json({ error: "Connector not found" }, 404);
+
+    try {
+      const creds = connector.credentials as Record<string, string> | null;
+      const config = connector.config as Record<string, string>;
+
+      switch (connector.type) {
+        case "github": {
+          const token = creds?.token;
+          if (!token) return c.json({ success: false, message: "No token configured" });
+          const res = await fetch("https://api.github.com/user", {
+            headers: { Authorization: `Bearer ${token}`, "User-Agent": "Gnana" },
+          });
+          if (res.ok) {
+            const user = (await res.json()) as { login: string };
+            return c.json({ success: true, message: `Connected as ${user.login}` });
+          }
+          return c.json({ success: false, message: `GitHub API error: ${res.status}` });
+        }
+        case "slack": {
+          const token = creds?.token;
+          if (!token) return c.json({ success: false, message: "No token configured" });
+          const res = await fetch("https://slack.com/api/auth.test", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const data = (await res.json()) as { ok: boolean; team?: string; error?: string };
+          if (data.ok) {
+            return c.json({ success: true, message: `Connected to ${data.team}` });
+          }
+          return c.json({ success: false, message: `Slack error: ${data.error}` });
+        }
+        case "http": {
+          const baseUrl = config?.baseUrl;
+          if (!baseUrl) return c.json({ success: false, message: "No base URL configured" });
+          const res = await fetch(baseUrl, { method: "HEAD" });
+          return c.json({ success: true, message: `Reachable (HTTP ${res.status})` });
+        }
+        default:
+          return c.json({ success: true, message: "Connector type not testable yet" });
+      }
+    } catch (err) {
+      return c.json({
+        success: false,
+        message: `Connection failed: ${err instanceof Error ? err.message : "Unknown error"}`,
+      });
+    }
   });
 
   return app;
