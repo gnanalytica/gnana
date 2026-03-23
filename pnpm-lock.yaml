@@ -153,6 +153,41 @@ importers:
         specifier: ^5.7.0
         version: 5.9.3
 
+  packages/connectors/github:
+    dependencies:
+      "@octokit/rest":
+        specifier: ^21.1.1
+        version: 21.1.1
+    devDependencies:
+      tsup:
+        specifier: ^8.3.0
+        version: 8.5.1(jiti@1.21.7)(postcss@8.5.8)(tsx@4.21.0)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+
+  packages/connectors/http:
+    devDependencies:
+      tsup:
+        specifier: ^8.3.0
+        version: 8.5.1(jiti@1.21.7)(postcss@8.5.8)(tsx@4.21.0)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+
+  packages/connectors/slack:
+    dependencies:
+      "@slack/web-api":
+        specifier: ^7.15.0
+        version: 7.15.0
+    devDependencies:
+      tsup:
+        specifier: ^8.3.0
+        version: 8.5.1(jiti@1.21.7)(postcss@8.5.8)(tsx@4.21.0)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+
   packages/core:
     dependencies:
       "@gnana/provider-base":
@@ -284,7 +319,13 @@ importers:
       postgres:
         specifier: ^3.4.0
         version: 3.4.8
+      ws:
+        specifier: ^8.20.0
+        version: 8.20.0
     devDependencies:
+      "@types/ws":
+        specifier: ^8.18.1
+        version: 8.18.1
       tsup:
         specifier: ^8.3.0
         version: 8.5.1(jiti@1.21.7)(postcss@8.5.8)(tsx@4.21.0)(typescript@5.9.3)
@@ -1750,6 +1791,106 @@ packages:
       }
     engines: { node: ">= 8" }
 
+  "@octokit/auth-token@5.1.2":
+    resolution:
+      {
+        integrity: sha512-JcQDsBdg49Yky2w2ld20IHAlwr8d/d8N6NiOXbtuoPCqzbsiJgF633mVUw3x4mo0H5ypataQIX7SFu3yy44Mpw==,
+      }
+    engines: { node: ">= 18" }
+
+  "@octokit/core@6.1.6":
+    resolution:
+      {
+        integrity: sha512-kIU8SLQkYWGp3pVKiYzA5OSaNF5EE03P/R8zEmmrG6XwOg5oBjXyQVVIauQ0dgau4zYhpZEhJrvIYt6oM+zZZA==,
+      }
+    engines: { node: ">= 18" }
+
+  "@octokit/endpoint@10.1.4":
+    resolution:
+      {
+        integrity: sha512-OlYOlZIsfEVZm5HCSR8aSg02T2lbUWOsCQoPKfTXJwDzcHQBrVBGdGXb89dv2Kw2ToZaRtudp8O3ZIYoaOjKlA==,
+      }
+    engines: { node: ">= 18" }
+
+  "@octokit/graphql@8.2.2":
+    resolution:
+      {
+        integrity: sha512-Yi8hcoqsrXGdt0yObxbebHXFOiUA+2v3n53epuOg1QUgOB6c4XzvisBNVXJSl8RYA5KrDuSL2yq9Qmqe5N0ryA==,
+      }
+    engines: { node: ">= 18" }
+
+  "@octokit/openapi-types@24.2.0":
+    resolution:
+      {
+        integrity: sha512-9sIH3nSUttelJSXUrmGzl7QUBFul0/mB8HRYl3fOlgHbIWG+WnYDXU3v/2zMtAvuzZ/ed00Ei6on975FhBfzrg==,
+      }
+
+  "@octokit/openapi-types@25.1.0":
+    resolution:
+      {
+        integrity: sha512-idsIggNXUKkk0+BExUn1dQ92sfysJrje03Q0bv0e+KPLrvyqZF8MnBpFz8UNfYDwB3Ie7Z0TByjWfzxt7vseaA==,
+      }
+
+  "@octokit/plugin-paginate-rest@11.6.0":
+    resolution:
+      {
+        integrity: sha512-n5KPteiF7pWKgBIBJSk8qzoZWcUkza2O6A0za97pMGVrGfPdltxrfmfF5GucHYvHGZD8BdaZmmHGz5cX/3gdpw==,
+      }
+    engines: { node: ">= 18" }
+    peerDependencies:
+      "@octokit/core": ">=6"
+
+  "@octokit/plugin-request-log@5.3.1":
+    resolution:
+      {
+        integrity: sha512-n/lNeCtq+9ofhC15xzmJCNKP2BWTv8Ih2TTy+jatNCCq/gQP/V7rK3fjIfuz0pDWDALO/o/4QY4hyOF6TQQFUw==,
+      }
+    engines: { node: ">= 18" }
+    peerDependencies:
+      "@octokit/core": ">=6"
+
+  "@octokit/plugin-rest-endpoint-methods@13.5.0":
+    resolution:
+      {
+        integrity: sha512-9Pas60Iv9ejO3WlAX3maE1+38c5nqbJXV5GrncEfkndIpZrJ/WPMRd2xYDcPPEt5yzpxcjw9fWNoPhsSGzqKqw==,
+      }
+    engines: { node: ">= 18" }
+    peerDependencies:
+      "@octokit/core": ">=6"
+
+  "@octokit/request-error@6.1.8":
+    resolution:
+      {
+        integrity: sha512-WEi/R0Jmq+IJKydWlKDmryPcmdYSVjL3ekaiEL1L9eo1sUnqMJ+grqmC9cjk7CA7+b2/T397tO5d8YLOH3qYpQ==,
+      }
+    engines: { node: ">= 18" }
+
+  "@octokit/request@9.2.4":
+    resolution:
+      {
+        integrity: sha512-q8ybdytBmxa6KogWlNa818r0k1wlqzNC+yNkcQDECHvQo8Vmstrg18JwqJHdJdUiHD2sjlwBgSm9kHkOKe2iyA==,
+      }
+    engines: { node: ">= 18" }
+
+  "@octokit/rest@21.1.1":
+    resolution:
+      {
+        integrity: sha512-sTQV7va0IUVZcntzy1q3QqPm/r8rWtDCqpRAmb8eXXnKkjoQEtFe3Nt5GTVsHft+R6jJoHeSiVLcgcvhtue/rg==,
+      }
+    engines: { node: ">= 18" }
+
+  "@octokit/types@13.10.0":
+    resolution:
+      {
+        integrity: sha512-ifLaO34EbbPj0Xgro4G5lP5asESjwHracYJvVaPIyXMuiuXLlhic3S47cBdTb+jfODkTE5YtGCLt3Ay3+J97sA==,
+      }
+
+  "@octokit/types@14.1.0":
+    resolution:
+      {
+        integrity: sha512-1y6DgTy8Jomcpu33N+p5w58l6xyt55Ar2I91RPiIA0xCJBXyUAhXCcmZaDWSANiha7R9a6qJJ2CRomGPZ6f46g==,
+      }
+
   "@opentelemetry/api-logs@0.207.0":
     resolution:
       {
@@ -3143,6 +3284,27 @@ packages:
     peerDependencies:
       webpack: ">=5.0.0"
 
+  "@slack/logger@4.0.1":
+    resolution:
+      {
+        integrity: sha512-6cmdPrV/RYfd2U0mDGiMK8S7OJqpCTm7enMLRR3edccsPX8j7zXTLnaEF4fhxxJJTAIOil6+qZrnUPTuaLvwrQ==,
+      }
+    engines: { node: ">= 18", npm: ">= 8.6.0" }
+
+  "@slack/types@2.20.1":
+    resolution:
+      {
+        integrity: sha512-eWX2mdt1ktpn8+40iiMc404uGrih+2fxiky3zBcPjtXKj6HLRdYlmhrPkJi7JTJm8dpXR6BWVWEDBXtaWMKD6A==,
+      }
+    engines: { node: ">= 12.13.0", npm: ">= 6.12.0" }
+
+  "@slack/web-api@7.15.0":
+    resolution:
+      {
+        integrity: sha512-va7zYIt3QHG1x9M/jqXXRPFMoOVlVSSRHC5YH+DzKYsrz5xUKOA3lR4THsu/Zxha9N1jOndbKFKLtr0WOPW1Vw==,
+      }
+    engines: { node: ">= 18", npm: ">= 8.6.0" }
+
   "@swc/helpers@0.5.15":
     resolution:
       {
@@ -3330,6 +3492,12 @@ packages:
     resolution:
       {
         integrity: sha512-KHPsfX/FoVbUGbyYvk1q9MMQHLPeRZhRJZdO45Q4YjvFkv4hMNghCWTvy7rdKessBsmtz4euWCWAB6/tVpI1Iw==,
+      }
+
+  "@types/ws@8.18.1":
+    resolution:
+      {
+        integrity: sha512-ThVF6DCVhA8kUGy+aazFQ4kXQ7E1Ty7A3ypFOe0IcJV8O/M511G99AW24irKrW56Wt44yG9+ij8FaqoBGkuBXg==,
       }
 
   "@vitest/expect@2.1.9":
@@ -3644,6 +3812,12 @@ packages:
     peerDependencies:
       postcss: ^8.1.0
 
+  axios@1.13.6:
+    resolution:
+      {
+        integrity: sha512-ChTCHMouEe2kn713WHbQGcuYrr6fXTBiu460OTwWrWob16g1bXn4vtz07Ope7ewMozJAnEquLk5lWQWtBig9DQ==,
+      }
+
   balanced-match@4.0.4:
     resolution:
       {
@@ -3671,6 +3845,12 @@ packages:
         integrity: sha512-GlF5wPWnSa/X5LKM1o0wz0suXIINz1iHRLvTS+sLyi7XPbe5ycmYI3DlZqVGZZtDgl4DmasFg7gOB3JYbphV5g==,
       }
     hasBin: true
+
+  before-after-hook@3.0.2:
+    resolution:
+      {
+        integrity: sha512-Nik3Sc0ncrMK4UUdXQmAnRtzmNQTAAXmXIopizwZ1W1t8QmfJj+zL4OA2I7XPTPW5z5TDqv4hRo/JzouDJnX3A==,
+      }
 
   bignumber.js@9.3.1:
     resolution:
@@ -4384,6 +4564,18 @@ packages:
       }
     engines: { node: ">=6" }
 
+  eventemitter3@4.0.7:
+    resolution:
+      {
+        integrity: sha512-8guHBZCwKnFhYdHr2ysuRWErTwhoN2X8XELRlrRwpmfeY2jjuUN4taQMsULKUVo1K4DvZl+0pgfyoysHxvmvEw==,
+      }
+
+  eventemitter3@5.0.4:
+    resolution:
+      {
+        integrity: sha512-mlsTRyGaPBjPedk6Bvw+aqbsXDtoAyAzm5MO7JgU+yVRyMQ5O8bD4Kcci7BS85f93veegeCPkL8R4GLClnjLFw==,
+      }
+
   events@3.3.0:
     resolution:
       {
@@ -4432,6 +4624,12 @@ packages:
     resolution:
       {
         integrity: sha512-fjquC59cD7CyW6urNXK0FBufkZcoiGG80wTuPujX590cB5Ttln20E2UB4S/WARVqhXffZl2LNgS+gQdPIIim/g==,
+      }
+
+  fast-content-type-parse@2.0.1:
+    resolution:
+      {
+        integrity: sha512-nGqtvLrj5w0naR6tDPfB4cUmYCqouzyQiz6C5y/LtcDllJdrcc6WaWW6iXyIIOErTa/XRybj28aasdn4LkVk6Q==,
       }
 
   fast-deep-equal@3.1.3:
@@ -4504,6 +4702,18 @@ packages:
       {
         integrity: sha512-pVIECanWFC61Hzl2+oOCtoJ3F17kglZC/6N94eRWycFgBH35hHx0Li604ZIzhseh97mf2p0cv7vVrOZGoqhlEg==,
       }
+
+  follow-redirects@1.15.11:
+    resolution:
+      {
+        integrity: sha512-deG2P0JfjrTxl50XGCDyfI97ZGVCxIpfKYmfyrQ54n5FO/0gfIES8C/Psl6kWVDolizcaaxZJnTS0QSMxvnsBQ==,
+      }
+    engines: { node: ">=4.0" }
+    peerDependencies:
+      debug: "*"
+    peerDependenciesMeta:
+      debug:
+        optional: true
 
   form-data-encoder@1.7.2:
     resolution:
@@ -4798,6 +5008,12 @@ packages:
       }
     engines: { node: ">= 0.4" }
 
+  is-electron@2.2.2:
+    resolution:
+      {
+        integrity: sha512-FO/Rhvz5tuw4MCWkpMzHFKWD2LsfHzIb7i6MdPYZ/KW7AlxawyLkqdy+jPZP1WubqEADE3O4FUENlJHDfQASRg==,
+      }
+
   is-extglob@2.1.1:
     resolution:
       {
@@ -4830,6 +5046,13 @@ packages:
       {
         integrity: sha512-U82MsXXiFIrjCK4otLT+o2NA2Cd2g5MLoOVXUZjIOhLurrRxpEXzI8O0KZHr3IjLvlAH1kTPYSuqer5T9ZVBKQ==,
       }
+
+  is-stream@2.0.1:
+    resolution:
+      {
+        integrity: sha512-hFoiJiTl63nn+kstHGBtewWSKnQLpyb155KHheA1l39uvtO9nWIop1p3udqPcUd/xbF1VLMO4n7OI6p7RbngDg==,
+      }
+    engines: { node: ">=8" }
 
   isexe@2.0.0:
     resolution:
@@ -5277,6 +5500,13 @@ packages:
       zod:
         optional: true
 
+  p-finally@1.0.0:
+    resolution:
+      {
+        integrity: sha512-LICb2p9CB7FS+0eR1oqWnHhp0FljGLZCWBE9aix0Uye9W8LTQPwMTYVGWQWIw9RdQiDg4+epXQODwIYJtSJaow==,
+      }
+    engines: { node: ">=4" }
+
   p-limit@3.1.0:
     resolution:
       {
@@ -5291,10 +5521,24 @@ packages:
       }
     engines: { node: ">=10" }
 
+  p-queue@6.6.2:
+    resolution:
+      {
+        integrity: sha512-RwFpb72c/BhQLEXIZ5K2e+AhgNVmIejGlTgiB9MzZ0e93GRvqZ7uSi0dvRF7/XIXDeNkra2fNHBxTyPDGySpjQ==,
+      }
+    engines: { node: ">=8" }
+
   p-retry@4.6.2:
     resolution:
       {
         integrity: sha512-312Id396EbJdvRONlngUx0NydfrIQ5lsYu0znKVUzVvArzEIt08V1qhtyESbGVd1FGX7UKtiFp5uwKZdM8wIuQ==,
+      }
+    engines: { node: ">=8" }
+
+  p-timeout@3.2.0:
+    resolution:
+      {
+        integrity: sha512-rhIwUycgwwKcP9yTOOFK/AKsAopjjCakVqLHePO3CC6Mir1Z99xT+R63jZxAT5lFZLa2inS5h+ZS2GvR99/FBg==,
       }
     engines: { node: ">=8" }
 
@@ -6190,6 +6434,12 @@ packages:
     resolution:
       {
         integrity: sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==,
+      }
+
+  universal-user-agent@7.0.3:
+    resolution:
+      {
+        integrity: sha512-TmnEAEAsBJVZM/AADELsK76llnwcf9vMKuPz8JflO1frO8Lchitr0fNaN9d+Ap0BjKtqWqd/J17qeDnXh8CL2A==,
       }
 
   unpipe@1.0.0:
@@ -7144,6 +7394,74 @@ snapshots:
     dependencies:
       "@nodelib/fs.scandir": 2.1.5
       fastq: 1.20.1
+
+  "@octokit/auth-token@5.1.2": {}
+
+  "@octokit/core@6.1.6":
+    dependencies:
+      "@octokit/auth-token": 5.1.2
+      "@octokit/graphql": 8.2.2
+      "@octokit/request": 9.2.4
+      "@octokit/request-error": 6.1.8
+      "@octokit/types": 14.1.0
+      before-after-hook: 3.0.2
+      universal-user-agent: 7.0.3
+
+  "@octokit/endpoint@10.1.4":
+    dependencies:
+      "@octokit/types": 14.1.0
+      universal-user-agent: 7.0.3
+
+  "@octokit/graphql@8.2.2":
+    dependencies:
+      "@octokit/request": 9.2.4
+      "@octokit/types": 14.1.0
+      universal-user-agent: 7.0.3
+
+  "@octokit/openapi-types@24.2.0": {}
+
+  "@octokit/openapi-types@25.1.0": {}
+
+  "@octokit/plugin-paginate-rest@11.6.0(@octokit/core@6.1.6)":
+    dependencies:
+      "@octokit/core": 6.1.6
+      "@octokit/types": 13.10.0
+
+  "@octokit/plugin-request-log@5.3.1(@octokit/core@6.1.6)":
+    dependencies:
+      "@octokit/core": 6.1.6
+
+  "@octokit/plugin-rest-endpoint-methods@13.5.0(@octokit/core@6.1.6)":
+    dependencies:
+      "@octokit/core": 6.1.6
+      "@octokit/types": 13.10.0
+
+  "@octokit/request-error@6.1.8":
+    dependencies:
+      "@octokit/types": 14.1.0
+
+  "@octokit/request@9.2.4":
+    dependencies:
+      "@octokit/endpoint": 10.1.4
+      "@octokit/request-error": 6.1.8
+      "@octokit/types": 14.1.0
+      fast-content-type-parse: 2.0.1
+      universal-user-agent: 7.0.3
+
+  "@octokit/rest@21.1.1":
+    dependencies:
+      "@octokit/core": 6.1.6
+      "@octokit/plugin-paginate-rest": 11.6.0(@octokit/core@6.1.6)
+      "@octokit/plugin-request-log": 5.3.1(@octokit/core@6.1.6)
+      "@octokit/plugin-rest-endpoint-methods": 13.5.0(@octokit/core@6.1.6)
+
+  "@octokit/types@13.10.0":
+    dependencies:
+      "@octokit/openapi-types": 24.2.0
+
+  "@octokit/types@14.1.0":
+    dependencies:
+      "@octokit/openapi-types": 25.1.0
 
   "@opentelemetry/api-logs@0.207.0":
     dependencies:
@@ -8154,6 +8472,29 @@ snapshots:
       - encoding
       - supports-color
 
+  "@slack/logger@4.0.1":
+    dependencies:
+      "@types/node": 22.19.15
+
+  "@slack/types@2.20.1": {}
+
+  "@slack/web-api@7.15.0":
+    dependencies:
+      "@slack/logger": 4.0.1
+      "@slack/types": 2.20.1
+      "@types/node": 22.19.15
+      "@types/retry": 0.12.0
+      axios: 1.13.6
+      eventemitter3: 5.0.4
+      form-data: 4.0.5
+      is-electron: 2.2.2
+      is-stream: 2.0.1
+      p-queue: 6.6.2
+      p-retry: 4.6.2
+      retry: 0.13.1
+    transitivePeerDependencies:
+      - debug
+
   "@swc/helpers@0.5.15":
     dependencies:
       tslib: 2.8.1
@@ -8257,6 +8598,10 @@ snapshots:
   "@types/retry@0.12.0": {}
 
   "@types/tedious@4.0.14":
+    dependencies:
+      "@types/node": 22.19.15
+
+  "@types/ws@8.18.1":
     dependencies:
       "@types/node": 22.19.15
 
@@ -8480,6 +8825,14 @@ snapshots:
       postcss: 8.5.8
       postcss-value-parser: 4.2.0
 
+  axios@1.13.6:
+    dependencies:
+      follow-redirects: 1.15.11
+      form-data: 4.0.5
+      proxy-from-env: 1.1.0
+    transitivePeerDependencies:
+      - debug
+
   balanced-match@4.0.4: {}
 
   base64-js@1.5.1: {}
@@ -8487,6 +8840,8 @@ snapshots:
   baseline-browser-mapping@2.10.10: {}
 
   bcryptjs@3.0.3: {}
+
+  before-after-hook@3.0.2: {}
 
   bignumber.js@9.3.1: {}
 
@@ -8899,6 +9254,10 @@ snapshots:
 
   event-target-shim@5.0.1: {}
 
+  eventemitter3@4.0.7: {}
+
+  eventemitter3@5.0.4: {}
+
   events@3.3.0: {}
 
   eventsource-parser@3.0.6: {}
@@ -8948,6 +9307,8 @@ snapshots:
       - supports-color
 
   extend@3.0.2: {}
+
+  fast-content-type-parse@2.0.1: {}
 
   fast-deep-equal@3.1.3: {}
 
@@ -8999,6 +9360,8 @@ snapshots:
       magic-string: 0.30.21
       mlly: 1.8.2
       rollup: 4.60.0
+
+  follow-redirects@1.15.11: {}
 
   form-data-encoder@1.7.2: {}
 
@@ -9190,6 +9553,8 @@ snapshots:
     dependencies:
       hasown: 2.0.2
 
+  is-electron@2.2.2: {}
+
   is-extglob@2.1.1: {}
 
   is-glob@4.0.3:
@@ -9203,6 +9568,8 @@ snapshots:
   is-reference@1.2.1:
     dependencies:
       "@types/estree": 1.0.8
+
+  is-stream@2.0.1: {}
 
   isexe@2.0.0: {}
 
@@ -9414,6 +9781,8 @@ snapshots:
     transitivePeerDependencies:
       - encoding
 
+  p-finally@1.0.0: {}
+
   p-limit@3.1.0:
     dependencies:
       yocto-queue: 0.1.0
@@ -9422,10 +9791,19 @@ snapshots:
     dependencies:
       p-limit: 3.1.0
 
+  p-queue@6.6.2:
+    dependencies:
+      eventemitter3: 4.0.7
+      p-timeout: 3.2.0
+
   p-retry@4.6.2:
     dependencies:
       "@types/retry": 0.12.0
       retry: 0.13.1
+
+  p-timeout@3.2.0:
+    dependencies:
+      p-finally: 1.0.0
 
   parseurl@1.3.3: {}
 
@@ -9998,6 +10376,8 @@ snapshots:
   undici-types@5.26.5: {}
 
   undici-types@6.21.0: {}
+
+  universal-user-agent@7.0.3: {}
 
   unpipe@1.0.0: {}
 

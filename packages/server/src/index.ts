@@ -9,6 +9,7 @@ import { agentRoutes } from "./routes/agents.js";
 import { runRoutes } from "./routes/runs.js";
 import { connectorRoutes } from "./routes/connectors.js";
 import { providerRoutes } from "./routes/providers.js";
+import { connectionManager } from "./ws.js";
 
 if (process.env.SENTRY_DSN) {
   Sentry.init({
@@ -30,15 +31,42 @@ export function createGnanaServer(config: GnanaServerConfig) {
   const events = createEventBus();
   const app = createApp(db, events);
 
+  // Bridge event bus to WebSocket connections
+  const runEvents = [
+    "run:started",
+    "run:status_changed",
+    "run:analysis_complete",
+    "run:plan_complete",
+    "run:awaiting_approval",
+    "run:approved",
+    "run:rejected",
+    "run:tool_called",
+    "run:tool_result",
+    "run:completed",
+    "run:failed",
+    "run:queued",
+    "run:log",
+  ];
+
+  for (const eventName of runEvents) {
+    events.on(eventName, (data: unknown) => {
+      const payload = data as Record<string, unknown>;
+      if (payload?.runId && typeof payload.runId === "string") {
+        connectionManager.broadcast(payload.runId, eventName, payload);
+      }
+    });
+  }
+
   return {
     app,
     db,
     events,
     start() {
       const port = config.port ?? 4000;
-      serve({ fetch: app.fetch, port }, (info) => {
+      const httpServer = serve({ fetch: app.fetch, port }, (info) => {
         console.log(`Gnana server running on http://localhost:${info.port}`);
       });
+      return httpServer;
     },
   };
 }
@@ -78,4 +106,5 @@ function createApp(db: Database, events: EventBus) {
 }
 
 export { createEventBus } from "@gnana/core";
+export { connectionManager } from "./ws.js";
 export type { GnanaServerConfig as ServerConfig };
