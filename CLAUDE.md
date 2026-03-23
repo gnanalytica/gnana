@@ -65,7 +65,8 @@ Provider-agnostic AI agent framework with a no-code builder. See `docs/DESIGN.md
 
 ## CI/CD Pipeline
 
-- `.github/workflows/ci.yml` — runs on every PR: install, typecheck, build, test
-- `.github/workflows/deploy.yml` — runs on push to main: build Docker image, deploy to Fly.io staging
-- Production deploy: create a git tag `v*` to promote to production
-- Preview apps: PRs get a preview deployment on Fly.io
+- `.github/workflows/ci.yml` — runs on every PR and push to main: install, typecheck, build, test
+- Staging deploy: handled by Fly.io native GitHub integration (auto-deploy on push to main)
+- `.github/workflows/deploy.yml` — production deploy on `v*` tags, PR preview apps via `superfly/fly-pr-review-apps`
+- Preview apps auto-created on PR open, auto-destroyed on PR close
+- Setup: add `FLY_API_TOKEN` secret to GitHub repo (generate with `fly tokens create deploy -x 999999h`)

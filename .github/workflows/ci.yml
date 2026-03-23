@@ -39,7 +39,7 @@ jobs:
 
       - name: Test
         run: pnpm test
-        continue-on-error: true  # Tests may not exist yet for all packages
+        continue-on-error: true
 
       - name: Format check
         run: pnpm format:check
