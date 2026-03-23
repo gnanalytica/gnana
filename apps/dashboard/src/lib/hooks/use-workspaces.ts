@@ -23,7 +23,7 @@ export function useWorkspaces() {
       { id: "personal", name: "Personal", slug: "personal", type: "personal", role: "owner" },
     ];
     setWorkspaces(mockWorkspaces);
-    setCurrent(mockWorkspaces[0]);
+    setCurrent(mockWorkspaces[0] ?? null);
     setLoading(false);
   }, []);
 

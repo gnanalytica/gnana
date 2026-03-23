@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { eq } from "drizzle-orm";
-import { createDatabase, users } from "@gnana/db";
+import { createDatabase, users, eq } from "@gnana/db";
 
 const db = createDatabase(process.env.DATABASE_URL!);
 
