@@ -37,6 +37,9 @@ importers:
       "@auth/drizzle-adapter":
         specifier: ^1.11.1
         version: 1.11.1
+      "@dagrejs/dagre":
+        specifier: ^3.0.0
+        version: 3.0.0
       "@gnana/client":
         specifier: workspace:*
         version: link:../../packages/client
@@ -46,6 +49,9 @@ importers:
       "@radix-ui/react-avatar":
         specifier: ^1.1.11
         version: 1.1.11(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      "@radix-ui/react-context-menu":
+        specifier: ^2.2.16
+        version: 2.2.16(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       "@radix-ui/react-dialog":
         specifier: ^1.1.15
         version: 1.1.15(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -75,7 +81,7 @@ importers:
         version: 1.2.8(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       "@sentry/nextjs":
         specifier: ^10.45.0
-        version: 10.45.0(@opentelemetry/context-async-hooks@2.6.0(@opentelemetry/api@1.9.0))(@opentelemetry/core@2.6.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.6.0(@opentelemetry/api@1.9.0))(next@15.5.14(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)(webpack@5.105.4)
+        version: 10.45.0(@opentelemetry/context-async-hooks@2.6.0(@opentelemetry/api@1.9.0))(@opentelemetry/core@2.6.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.6.0(@opentelemetry/api@1.9.0))(next@15.5.14(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)(webpack@5.105.4(esbuild@0.27.4))
       "@xyflow/react":
         specifier: ^12.10.1
         version: 12.10.1(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -118,6 +124,9 @@ importers:
       react-dom:
         specifier: ^19.0.0
         version: 19.2.4(react@19.2.4)
+      react-resizable-panels:
+        specifier: ^4.7.5
+        version: 4.7.5(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       tailwind-merge:
         specifier: ^2.6.0
         version: 2.6.1
@@ -513,6 +522,18 @@ packages:
         integrity: sha512-LwdZHpScM4Qz8Xw2iKSzS+cfglZzJGvofQICy7W7v4caru4EaAmyUuO6BGrbyQ2mYV11W0U8j5mBhd14dd3B0A==,
       }
     engines: { node: ">=6.9.0" }
+
+  "@dagrejs/dagre@3.0.0":
+    resolution:
+      {
+        integrity: sha512-ZzhnTy1rfuoew9Ez3EIw4L2znPGnYYhfn8vc9c4oB8iw6QAsszbiU0vRhlxWPFnmmNSFAkrYeF1PhM5m4lAN0Q==,
+      }
+
+  "@dagrejs/graphlib@4.0.1":
+    resolution:
+      {
+        integrity: sha512-IvcV6FduIIAmLwnH+yun+QtV36SC7mERqa86aClNqmMN09WhmPPYU8ckHrZBozErf+UvHPWOTJYaGYiIcs0DgA==,
+      }
 
   "@drizzle-team/brocli@0.10.2":
     resolution:
@@ -2365,6 +2386,22 @@ packages:
       react: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
     peerDependenciesMeta:
       "@types/react":
+        optional: true
+
+  "@radix-ui/react-context-menu@2.2.16":
+    resolution:
+      {
+        integrity: sha512-O8morBEW+HsVG28gYDZPTrT9UUovQUlJue5YO836tiTJhuIWBm/zQHc7j388sHWtdH/xUZurK9olD2+pcqx5ww==,
+      }
+    peerDependencies:
+      "@types/react": "*"
+      "@types/react-dom": "*"
+      react: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+      react-dom: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+    peerDependenciesMeta:
+      "@types/react":
+        optional: true
+      "@types/react-dom":
         optional: true
 
   "@radix-ui/react-context@1.1.2":
@@ -5900,6 +5937,15 @@ packages:
       "@types/react":
         optional: true
 
+  react-resizable-panels@4.7.5:
+    resolution:
+      {
+        integrity: sha512-ma22FpbUolymMK6xIwZOzzNxszi59kZdJiw805byxuGBrjAs8HngpQrrgEp5dj1OOV2jVFBCJxhVult6G+2KaQ==,
+      }
+    peerDependencies:
+      react: ^18.0.0 || ^19.0.0
+      react-dom: ^18.0.0 || ^19.0.0
+
   react-style-singleton@2.2.3:
     resolution:
       {
@@ -6883,6 +6929,12 @@ snapshots:
       "@babel/helper-string-parser": 7.27.1
       "@babel/helper-validator-identifier": 7.28.5
 
+  "@dagrejs/dagre@3.0.0":
+    dependencies:
+      "@dagrejs/graphlib": 4.0.1
+
+  "@dagrejs/graphlib@4.0.1": {}
+
   "@drizzle-team/brocli@0.10.2": {}
 
   "@emnapi/runtime@1.9.1":
@@ -7816,6 +7868,20 @@ snapshots:
     optionalDependencies:
       "@types/react": 19.2.14
 
+  "@radix-ui/react-context-menu@2.2.16(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)":
+    dependencies:
+      "@radix-ui/primitive": 1.1.3
+      "@radix-ui/react-context": 1.1.2(@types/react@19.2.14)(react@19.2.4)
+      "@radix-ui/react-menu": 2.1.16(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      "@radix-ui/react-primitive": 2.1.3(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      "@radix-ui/react-use-callback-ref": 1.1.1(@types/react@19.2.14)(react@19.2.4)
+      "@radix-ui/react-use-controllable-state": 1.2.2(@types/react@19.2.14)(react@19.2.4)
+      react: 19.2.4
+      react-dom: 19.2.4(react@19.2.4)
+    optionalDependencies:
+      "@types/react": 19.2.14
+      "@types/react-dom": 19.2.3(@types/react@19.2.14)
+
   "@radix-ui/react-context@1.1.2(@types/react@19.2.14)(react@19.2.4)":
     dependencies:
       react: 19.2.4
@@ -8375,7 +8441,7 @@ snapshots:
 
   "@sentry/core@10.45.0": {}
 
-  "@sentry/nextjs@10.45.0(@opentelemetry/context-async-hooks@2.6.0(@opentelemetry/api@1.9.0))(@opentelemetry/core@2.6.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.6.0(@opentelemetry/api@1.9.0))(next@15.5.14(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)(webpack@5.105.4)":
+  "@sentry/nextjs@10.45.0(@opentelemetry/context-async-hooks@2.6.0(@opentelemetry/api@1.9.0))(@opentelemetry/core@2.6.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.6.0(@opentelemetry/api@1.9.0))(next@15.5.14(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)(webpack@5.105.4(esbuild@0.27.4))":
     dependencies:
       "@opentelemetry/api": 1.9.0
       "@opentelemetry/semantic-conventions": 1.40.0
@@ -8387,7 +8453,7 @@ snapshots:
       "@sentry/opentelemetry": 10.45.0(@opentelemetry/api@1.9.0)(@opentelemetry/context-async-hooks@2.6.0(@opentelemetry/api@1.9.0))(@opentelemetry/core@2.6.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.6.0(@opentelemetry/api@1.9.0))(@opentelemetry/semantic-conventions@1.40.0)
       "@sentry/react": 10.45.0(react@19.2.4)
       "@sentry/vercel-edge": 10.45.0
-      "@sentry/webpack-plugin": 5.1.1(webpack@5.105.4)
+      "@sentry/webpack-plugin": 5.1.1(webpack@5.105.4(esbuild@0.27.4))
       next: 15.5.14(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       rollup: 4.60.0
       stacktrace-parser: 0.1.11
@@ -8475,11 +8541,11 @@ snapshots:
       "@opentelemetry/resources": 2.6.0(@opentelemetry/api@1.9.0)
       "@sentry/core": 10.45.0
 
-  "@sentry/webpack-plugin@5.1.1(webpack@5.105.4)":
+  "@sentry/webpack-plugin@5.1.1(webpack@5.105.4(esbuild@0.27.4))":
     dependencies:
       "@sentry/bundler-plugin-core": 5.1.1
       uuid: 9.0.1
-      webpack: 5.105.4
+      webpack: 5.105.4(esbuild@0.27.4)
     transitivePeerDependencies:
       - encoding
       - supports-color
@@ -9995,6 +10061,11 @@ snapshots:
     optionalDependencies:
       "@types/react": 19.2.14
 
+  react-resizable-panels@4.7.5(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+    dependencies:
+      react: 19.2.4
+      react-dom: 19.2.4(react@19.2.4)
+
   react-style-singleton@2.2.3(@types/react@19.2.14)(react@19.2.4):
     dependencies:
       get-nonce: 1.0.1
@@ -10277,13 +10348,15 @@ snapshots:
 
   tapable@2.3.1: {}
 
-  terser-webpack-plugin@5.4.0(webpack@5.105.4):
+  terser-webpack-plugin@5.4.0(esbuild@0.27.4)(webpack@5.105.4(esbuild@0.27.4)):
     dependencies:
       "@jridgewell/trace-mapping": 0.3.31
       jest-worker: 27.5.1
       schema-utils: 4.3.3
       terser: 5.46.1
-      webpack: 5.105.4
+      webpack: 5.105.4(esbuild@0.27.4)
+    optionalDependencies:
+      esbuild: 0.27.4
 
   terser@5.46.1:
     dependencies:
@@ -10500,7 +10573,7 @@ snapshots:
 
   webpack-sources@3.3.4: {}
 
-  webpack@5.105.4:
+  webpack@5.105.4(esbuild@0.27.4):
     dependencies:
       "@types/eslint-scope": 3.7.7
       "@types/estree": 1.0.8
@@ -10524,7 +10597,7 @@ snapshots:
       neo-async: 2.6.2
       schema-utils: 4.3.3
       tapable: 2.3.1
-      terser-webpack-plugin: 5.4.0(webpack@5.105.4)
+      terser-webpack-plugin: 5.4.0(esbuild@0.27.4)(webpack@5.105.4(esbuild@0.27.4))
       watchpack: 2.5.1
       webpack-sources: 3.3.4
     transitivePeerDependencies:
