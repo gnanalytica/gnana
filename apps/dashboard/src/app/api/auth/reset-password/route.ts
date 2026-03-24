@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { createDatabase, users, passwordResetTokens, eq, gt } from "@gnana/db";
+import { createDatabase, users, passwordResetTokens, eq } from "@gnana/db";
 
 const db = createDatabase(process.env.DATABASE_URL!);
 

@@ -18,7 +18,7 @@ export async function POST(request: Request) {
       headers: {
         "Content-Type": "application/json",
         // Use the session's access token to authenticate with the API server
-        Authorization: `Bearer ${(session as Record<string, unknown>).accessToken ?? ""}`,
+        Authorization: `Bearer ${(session as unknown as Record<string, unknown>).accessToken ?? ""}`,
       },
       body: JSON.stringify({ message, pipeline, history }),
     });
