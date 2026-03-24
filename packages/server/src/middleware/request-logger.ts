@@ -6,7 +6,8 @@ export const requestLogger = createMiddleware(async (c, next) => {
   await next();
   const duration = Date.now() - start;
   const status = c.res.status;
-  const log = status >= 500 ? serverLog.error : status >= 400 ? serverLog.warn : serverLog.info;
+  const log =
+    status >= 500 ? serverLog.error.bind(serverLog) : status >= 400 ? serverLog.warn.bind(serverLog) : serverLog.info.bind(serverLog);
   log(
     {
       method: c.req.method,
