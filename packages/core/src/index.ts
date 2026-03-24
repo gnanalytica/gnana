@@ -40,3 +40,7 @@ export { createEventBus } from "./event-bus.js";
 export { ToolExecutorImpl } from "./tool-executor.js";
 export { LLMRouterImpl } from "./llm-router.js";
 export { executePipeline, resumePipeline, rejectRun } from "./pipeline.js";
+
+// DAG executor
+export { executeDAG, resumeDAG } from "./dag-executor.js";
+export type { DAGNode, DAGEdge, DAGPipeline, DAGContext, DAGRunStore } from "./dag-executor.js";

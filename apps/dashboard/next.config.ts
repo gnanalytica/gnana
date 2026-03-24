@@ -14,7 +14,7 @@ const nextConfig: NextConfig = {
 
 export default withSentryConfig(nextConfig, {
   org: "gnanalytica-7j",
-  project: "gnana-sentry",
+  project: "gnana-dashboard",
   silent: !process.env.CI,
   widenClientFileUpload: true,
   disableLogger: true,

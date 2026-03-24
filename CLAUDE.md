@@ -24,7 +24,7 @@ Provider-agnostic AI agent framework with a no-code builder. See `docs/DESIGN.md
 - **Production server**: Fly.io app `gnana` (Hono API on port 4000)
 - **Production dashboard**: Fly.io app `gnana-dashboard` (Next.js on port 3000)
 - **Production database**: Fly Postgres (with auto-backups)
-- **Monitoring**: Sentry (`gnana-sentry` project)
+- **Monitoring**: Sentry (`gnana-api` and `gnana-dashboard` projects)
 - **Dev database**: Neon free tier (cloud Postgres, zero local setup) or local Postgres
 - **CI/CD**: GitHub Actions — test/build on PR, deploy on merge to main
 - **Docker**: Production builds only — developers use native `pnpm dev`, never Docker locally

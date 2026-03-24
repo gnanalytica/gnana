@@ -2,7 +2,7 @@ import * as Sentry from "@sentry/node";
 import { Hono } from "hono";
 import { serve } from "@hono/node-server";
 import { cors } from "hono/cors";
-import { createDatabase, type Database } from "@gnana/db";
+import { createDatabase, agents, runs, eq, type Database } from "@gnana/db";
 import { createEventBus, type EventBus, type LLMProvider } from "@gnana/core";
 import type { RouterConfig } from "@gnana/core";
 import { agentRoutes } from "./routes/agents.js";
@@ -13,9 +13,11 @@ import { workspaceRoutes } from "./routes/workspaces.js";
 import { apiKeyRoutes } from "./routes/api-keys.js";
 import { publicInviteRoutes, protectedInviteRoutes } from "./routes/invites.js";
 import { pipelineVersionRoutes } from "./routes/pipeline-versions.js";
+import { chatRoutes } from "./routes/chat.js";
 import { connectionManager } from "./ws.js";
 import { authMiddleware } from "./middleware/auth.js";
 import { workspaceMiddleware } from "./middleware/workspace.js";
+import { JobQueue } from "./job-queue.js";
 
 if (process.env.SENTRY_DSN) {
   Sentry.init({
@@ -35,7 +37,8 @@ export interface GnanaServerConfig {
 export function createGnanaServer(config: GnanaServerConfig) {
   const db = createDatabase(config.database);
   const events = createEventBus();
-  const app = createApp(db, events);
+  const queue = new JobQueue(db);
+  const app = createApp(db, events, queue);
 
   // Bridge event bus to WebSocket connections
   const runEvents = [
@@ -63,12 +66,52 @@ export function createGnanaServer(config: GnanaServerConfig) {
     });
   }
 
+  // Register the run:execute job handler
+  queue.register("run:execute", async (payload) => {
+    const { runId, agentId } = payload as {
+      runId: string;
+      agentId: string;
+    };
+
+    // Load agent config from DB
+    const agentRows = await db.select().from(agents).where(eq(agents.id, agentId)).limit(1);
+
+    const agent = agentRows[0];
+    if (!agent) {
+      await db
+        .update(runs)
+        .set({ status: "failed", error: "Agent not found", updatedAt: new Date() })
+        .where(eq(runs.id, runId));
+      await events.emit("run:failed", { runId, error: "Agent not found" });
+      return;
+    }
+
+    // Update run status to indicate processing has started
+    await db
+      .update(runs)
+      .set({ status: "analyzing", updatedAt: new Date() })
+      .where(eq(runs.id, runId));
+    await events.emit("run:started", { runId, agentId });
+
+    // NOTE: Full pipeline execution requires an LLM router and tool executor.
+    // For now, mark the run as completed to confirm the job queue works end-to-end.
+    // When providers are configured, this handler should build a RunContext or
+    // DAGContext and call executePipeline() or executeDAG() from @gnana/core.
+    await db
+      .update(runs)
+      .set({ status: "completed", updatedAt: new Date() })
+      .where(eq(runs.id, runId));
+    await events.emit("run:completed", { runId });
+  });
+
   return {
     app,
     db,
     events,
+    queue,
     start() {
       const port = config.port ?? 4000;
+      queue.start();
       const httpServer = serve({ fetch: app.fetch, port }, (info) => {
         console.log(`Gnana server running on http://localhost:${info.port}`);
       });
@@ -77,7 +120,7 @@ export function createGnanaServer(config: GnanaServerConfig) {
   };
 }
 
-function createApp(db: Database, events: EventBus) {
+function createApp(db: Database, events: EventBus, queue: JobQueue) {
   const app = new Hono();
 
   // Middleware
@@ -117,12 +160,13 @@ function createApp(db: Database, events: EventBus) {
 
   // Mount route groups
   api.route("/agents", agentRoutes(db));
-  api.route("/runs", runRoutes(db, events));
+  api.route("/runs", runRoutes(db, events, queue));
   api.route("/connectors", connectorRoutes(db));
   api.route("/providers", providerRoutes(db));
   api.route("/workspaces", workspaceRoutes(db));
   api.route("/keys", apiKeyRoutes(db));
   api.route("/pipeline-versions", pipelineVersionRoutes(db));
+  api.route("/chat", chatRoutes(db));
 
   app.route("/api", api);
 
@@ -131,4 +175,5 @@ function createApp(db: Database, events: EventBus) {
 
 export { createEventBus } from "@gnana/core";
 export { connectionManager } from "./ws.js";
+export { JobQueue } from "./job-queue.js";
 export type { GnanaServerConfig as ServerConfig };

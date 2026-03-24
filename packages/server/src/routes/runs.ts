@@ -3,8 +3,9 @@ import { eq, and, desc, sql, runs, runLogs, usageRecords, type Database } from "
 import type { EventBus } from "@gnana/core";
 import { requireRole } from "../middleware/rbac.js";
 import { planRunLimit } from "../middleware/plan-limits.js";
+import type { JobQueue } from "../job-queue.js";
 
-export function runRoutes(db: Database, events: EventBus) {
+export function runRoutes(db: Database, events: EventBus, queue?: JobQueue) {
   const app = new Hono();
 
   // List runs — viewer+
@@ -67,6 +68,15 @@ export function runRoutes(db: Database, events: EventBus) {
           updatedAt: new Date(),
         },
       });
+
+    // Enqueue background job if queue is available, otherwise just emit event
+    if (queue) {
+      await queue.enqueue("run:execute", {
+        runId: run.id,
+        agentId: run.agentId,
+        workspaceId,
+      });
+    }
 
     await events.emit("run:queued", { runId: run.id, agentId: run.agentId });
     return c.json(run, 201);
