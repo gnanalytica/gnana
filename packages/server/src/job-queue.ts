@@ -105,8 +105,9 @@ export class JobQueue {
           .where(eq(jobs.id, job.id));
       } catch (error) {
         const message = error instanceof Error ? error.message : "Unknown error";
+        const attempt = (job.attempts ?? 0) + 1;
         jobLog.error(
-          { err: error, jobId: job.id, jobType: job.type, attempt: (job.attempts ?? 0) + 1 },
+          { err: error, jobId: job.id, jobType: job.type, attempt },
           "Job failed",
         );
         Sentry.withScope((scope) => {
@@ -114,15 +115,26 @@ export class JobQueue {
           scope.setContext("job", {
             id: job.id,
             type: job.type,
-            attempt: (job.attempts ?? 0) + 1,
+            attempt,
             payload: job.payload,
           });
           Sentry.captureException(error);
         });
-        await this.db
-          .update(jobs)
-          .set({ status: "failed", error: message })
-          .where(eq(jobs.id, job.id));
+        if (attempt < (job.maxAttempts ?? 3)) {
+          jobLog.info(
+            { jobId: job.id, jobType: job.type, attempt, maxAttempts: job.maxAttempts ?? 3 },
+            "Job retry scheduled",
+          );
+          await this.db
+            .update(jobs)
+            .set({ status: "pending", error: message })
+            .where(eq(jobs.id, job.id));
+        } else {
+          await this.db
+            .update(jobs)
+            .set({ status: "failed", error: message })
+            .where(eq(jobs.id, job.id));
+        }
       }
     } catch (error) {
       jobLog.error({ err: error }, "Job queue poll error");
