@@ -341,6 +341,9 @@ importers:
       '@gnana/db':
         specifier: workspace:*
         version: link:../db
+      '@gnana/mcp':
+        specifier: workspace:*
+        version: link:../mcp
       '@gnana/provider-anthropic':
         specifier: workspace:*
         version: link:../providers/anthropic

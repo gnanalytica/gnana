@@ -75,6 +75,12 @@ function shutdown(signal: string) {
   serverLog.info(`${signal} received, shutting down gracefully...`);
   clearInterval(heartbeatInterval);
   wss.close();
+
+  // Shut down MCP connections
+  server.mcpManager.shutdown().catch((err) => {
+    serverLog.error({ err }, "Error shutting down MCP manager");
+  });
+
   httpServer.close(() => {
     serverLog.info("Server closed");
     process.exit(0);

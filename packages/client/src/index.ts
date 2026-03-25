@@ -318,4 +318,43 @@ class ConnectorsAPI {
     });
     return res.json();
   }
+
+  async refreshTools(
+    id: string,
+  ): Promise<{
+    success: boolean;
+    toolCount?: number;
+    tools?: { name: string; description: string }[];
+    message?: string;
+  }> {
+    const res = await this.client.fetch(
+      `/api/connectors/${id}/refresh-tools`,
+      { method: "POST" },
+    );
+    return res.json() as Promise<{
+      success: boolean;
+      toolCount?: number;
+      tools?: { name: string; description: string }[];
+      message?: string;
+    }>;
+  }
+
+  async status(
+    id: string,
+  ): Promise<{
+    connected: boolean;
+    toolCount: number;
+    lastConnected: string | null;
+    error: string | null;
+  }> {
+    const res = await this.client.fetch(
+      `/api/connectors/${id}/status`,
+    );
+    return res.json() as Promise<{
+      connected: boolean;
+      toolCount: number;
+      lastConnected: string | null;
+      error: string | null;
+    }>;
+  }
 }

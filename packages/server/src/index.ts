@@ -5,6 +5,7 @@ import { cors } from "hono/cors";
 import { createDatabase, runLogs, sql, type Database } from "@gnana/db";
 import { createEventBus, type EventBus, type LLMProvider } from "@gnana/core";
 import type { RouterConfig } from "@gnana/core";
+import { MCPManager } from "@gnana/mcp";
 import { createRunHandler, createResumeHandler } from "./execution/run-handler.js";
 import { agentRoutes } from "./routes/agents.js";
 import { runRoutes } from "./routes/runs.js";
@@ -47,7 +48,8 @@ export function createGnanaServer(config: GnanaServerConfig) {
   const events = createEventBus();
   const queue = new JobQueue(db);
   const cronManager = new CronManager(db, queue);
-  const app = createApp(db, events, queue, cronManager);
+  const mcpManager = new MCPManager();
+  const app = createApp(db, events, queue, cronManager, mcpManager);
 
   // Bridge event bus to WebSocket connections
   const runEvents = [
@@ -76,8 +78,8 @@ export function createGnanaServer(config: GnanaServerConfig) {
   }
 
   // Register job handlers for DAG execution
-  const runHandler = createRunHandler({ db, events });
-  const resumeHandler = createResumeHandler({ db, events });
+  const runHandler = createRunHandler({ db, events, mcpManager });
+  const resumeHandler = createResumeHandler({ db, events, mcpManager });
 
   queue.register("run:execute", runHandler);
   queue.register("run:resume", resumeHandler);
@@ -125,6 +127,7 @@ export function createGnanaServer(config: GnanaServerConfig) {
     events,
     queue,
     cronManager,
+    mcpManager,
     start() {
       const port = config.port ?? 4000;
       queue.start();
@@ -135,6 +138,14 @@ export function createGnanaServer(config: GnanaServerConfig) {
           `Gnana server running on http://localhost:${info.port}`,
         );
       });
+
+      // Graceful MCP shutdown
+      const shutdownHandler = async () => {
+        await mcpManager.shutdown();
+      };
+      process.on("SIGTERM", shutdownHandler);
+      process.on("SIGINT", shutdownHandler);
+
       return httpServer;
     },
   };
@@ -165,7 +176,7 @@ function formatLogMessage(eventName: string, payload: Record<string, unknown>): 
   }
 }
 
-function createApp(db: Database, events: EventBus, queue: JobQueue, cronManager: CronManager) {
+function createApp(db: Database, events: EventBus, queue: JobQueue, cronManager: CronManager, mcpManager: MCPManager) {
   const app = new Hono();
 
   // Middleware
@@ -241,7 +252,7 @@ function createApp(db: Database, events: EventBus, queue: JobQueue, cronManager:
   // Mount route groups
   api.route("/agents", agentRoutes(db, cronManager));
   api.route("/runs", runRoutes(db, events, queue));
-  api.route("/connectors", connectorRoutes(db));
+  api.route("/connectors", connectorRoutes(db, mcpManager));
   api.route("/providers", providerRoutes(db));
   api.route("/workspaces", workspaceRoutes(db));
   api.route("/keys", apiKeyRoutes(db));

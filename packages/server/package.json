@@ -23,6 +23,7 @@
     "@gnana/connector-slack": "workspace:*",
     "@gnana/core": "workspace:*",
     "@gnana/db": "workspace:*",
+    "@gnana/mcp": "workspace:*",
     "@gnana/provider-anthropic": "workspace:*",
     "@gnana/provider-base": "workspace:*",
     "@gnana/provider-google": "workspace:*",

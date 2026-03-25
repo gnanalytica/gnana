@@ -1,5 +1,6 @@
 import { executeDAG, resumeDAG } from "@gnana/core";
 import type { EventBus, DAGContext, DAGPipeline } from "@gnana/core";
+import type { MCPManager } from "@gnana/mcp";
 import { agents, runs, eq, type Database } from "@gnana/db";
 import { DrizzleDAGRunStore } from "./dag-run-store.js";
 import { resolveProviders } from "./resolve-providers.js";
@@ -10,6 +11,7 @@ import { jobLog } from "../logger.js";
 interface RunHandlerDeps {
   db: Database;
   events: EventBus;
+  mcpManager?: MCPManager;
 }
 
 /**
@@ -33,7 +35,7 @@ async function markFailed(
  * resolves providers & tools, builds a DAGContext, and calls executeDAG().
  */
 export function createRunHandler(deps: RunHandlerDeps) {
-  const { db, events } = deps;
+  const { db, events, mcpManager } = deps;
 
   return async (payload: Record<string, unknown>): Promise<void> => {
     const runId = payload.runId as string;
@@ -69,9 +71,9 @@ export function createRunHandler(deps: RunHandlerDeps) {
       // 3. Resolve LLM providers for this workspace
       const llm = await resolveProviders(db, workspaceId);
 
-      // 4. Resolve tools from agent's toolsConfig
+      // 4. Resolve tools from agent's toolsConfig (including MCP servers)
       const toolsConfig = (agent.toolsConfig ?? {}) as ToolsConfig;
-      const tools = await resolveTools(toolsConfig, workspaceId, db);
+      const tools = await resolveTools(toolsConfig, workspaceId, db, mcpManager);
 
       // 5. Get pipeline from agent's pipelineConfig
       const pipeline = agent.pipelineConfig as DAGPipeline | null;
@@ -122,7 +124,7 @@ export function createRunHandler(deps: RunHandlerDeps) {
  * but calls resumeDAG() to continue from a human gate.
  */
 export function createResumeHandler(deps: RunHandlerDeps) {
-  const { db, events } = deps;
+  const { db, events, mcpManager } = deps;
 
   return async (payload: Record<string, unknown>): Promise<void> => {
     const runId = payload.runId as string;
@@ -158,9 +160,9 @@ export function createResumeHandler(deps: RunHandlerDeps) {
       // 3. Resolve LLM providers
       const llm = await resolveProviders(db, workspaceId);
 
-      // 4. Resolve tools
+      // 4. Resolve tools (including MCP servers)
       const toolsConfig = (agent.toolsConfig ?? {}) as ToolsConfig;
-      const tools = await resolveTools(toolsConfig, workspaceId, db);
+      const tools = await resolveTools(toolsConfig, workspaceId, db, mcpManager);
 
       // 5. Get pipeline
       const pipeline = agent.pipelineConfig as DAGPipeline | null;

@@ -1,5 +1,7 @@
 import { Hono } from "hono";
 import { eq, and, desc, sql, connectors, connectorTools, type Database } from "@gnana/db";
+import { MCPClient, type MCPManager } from "@gnana/mcp";
+import type { MCPServerConfig } from "@gnana/core";
 import { requireRole } from "../middleware/rbac.js";
 import { planLimit } from "../middleware/plan-limits.js";
 import { cacheControl } from "../middleware/cache.js";
@@ -7,7 +9,7 @@ import { encryptJson, decryptJson } from "../utils/encryption.js";
 import { createConnectorSchema } from "../validation/schemas.js";
 import { errorResponse } from "../utils/errors.js";
 
-export function connectorRoutes(db: Database) {
+export function connectorRoutes(db: Database, mcpManager: MCPManager) {
   const app = new Hono();
 
   // List connectors — viewer+
@@ -164,6 +166,44 @@ export function connectorRoutes(db: Database) {
           const res = await fetch(baseUrl, { method: "HEAD" });
           return c.json({ success: true, message: `Reachable (HTTP ${res.status})` });
         }
+        case "mcp": {
+          const connConfig = connector.config as {
+            transport: string;
+            serverName?: string;
+            url?: string;
+            command?: string;
+            args?: string[];
+            env?: Record<string, string>;
+          };
+          const mcpConfig: MCPServerConfig = {
+            name: connConfig.serverName || connector.name,
+            transport: connConfig.transport as "stdio" | "http",
+            command: connConfig.command,
+            args: connConfig.args,
+            url: connConfig.url,
+            env: connConfig.env,
+          };
+
+          const testClient = new MCPClient(mcpConfig);
+          try {
+            await testClient.connect();
+            const tools = testClient.getTools();
+            await testClient.disconnect();
+            return c.json({
+              success: true,
+              message: `Connected. Discovered ${tools.length} tool(s).`,
+              tools: tools.map((t) => ({
+                name: t.name,
+                description: t.description,
+              })),
+            });
+          } catch (err) {
+            return c.json({
+              success: false,
+              message: `MCP connection failed: ${err instanceof Error ? err.message : String(err)}`,
+            });
+          }
+        }
         default:
           return c.json({ success: true, message: "Connector type not testable yet" });
       }
@@ -173,6 +213,144 @@ export function connectorRoutes(db: Database) {
         message: `Connection failed: ${err instanceof Error ? err.message : "Unknown error"}`,
       });
     }
+  });
+
+  // Refresh MCP tools — connect, discover, persist to connector_tools
+  app.post("/:id/refresh-tools", requireRole("admin"), async (c) => {
+    const id = c.req.param("id");
+    const workspaceId = c.get("workspaceId");
+
+    const result = await db
+      .select()
+      .from(connectors)
+      .where(
+        and(
+          eq(connectors.id, id),
+          eq(connectors.workspaceId, workspaceId),
+        ),
+      )
+      .limit(1);
+
+    const connector = result[0];
+    if (!connector)
+      return errorResponse(c, 404, "NOT_FOUND", "Connector not found");
+    if (connector.type !== "mcp") {
+      return c.json(
+        {
+          error: {
+            code: "INVALID_TYPE",
+            message: "Only MCP connectors support tool refresh",
+          },
+        },
+        400,
+      );
+    }
+
+    const connConfig = connector.config as {
+      transport: string;
+      serverName?: string;
+      url?: string;
+      command?: string;
+      args?: string[];
+      env?: Record<string, string>;
+    };
+    const mcpConfig: MCPServerConfig = {
+      name: connConfig.serverName || connector.name,
+      transport: connConfig.transport as "stdio" | "http",
+      command: connConfig.command,
+      args: connConfig.args,
+      url: connConfig.url,
+      env: connConfig.env,
+    };
+
+    const testClient = new MCPClient(mcpConfig);
+    try {
+      await testClient.connect();
+      const tools = testClient.getTools();
+      await testClient.disconnect();
+
+      // Delete existing tool rows for this connector
+      await db
+        .delete(connectorTools)
+        .where(eq(connectorTools.connectorId, id));
+
+      // Insert new tool rows
+      if (tools.length > 0) {
+        await db.insert(connectorTools).values(
+          tools.map((t) => ({
+            connectorId: id,
+            name: t.name,
+            description: t.description,
+            inputSchema: t.inputSchema,
+          })),
+        );
+      }
+
+      return c.json({
+        success: true,
+        toolCount: tools.length,
+        tools: tools.map((t) => ({
+          name: t.name,
+          description: t.description,
+        })),
+      });
+    } catch (err) {
+      return c.json(
+        {
+          success: false,
+          message: `MCP refresh failed: ${err instanceof Error ? err.message : String(err)}`,
+        },
+        500,
+      );
+    }
+  });
+
+  // MCP server status — checks in-memory MCPManager
+  app.get("/:id/status", requireRole("viewer"), async (c) => {
+    const id = c.req.param("id");
+    const workspaceId = c.get("workspaceId");
+
+    // Verify connector exists and belongs to workspace
+    const result = await db
+      .select({ id: connectors.id, type: connectors.type })
+      .from(connectors)
+      .where(
+        and(
+          eq(connectors.id, id),
+          eq(connectors.workspaceId, workspaceId),
+        ),
+      )
+      .limit(1);
+
+    const connector = result[0];
+    if (!connector)
+      return errorResponse(c, 404, "NOT_FOUND", "Connector not found");
+
+    if (connector.type !== "mcp") {
+      return c.json({
+        connected: true,
+        toolCount: 0,
+        lastConnected: null,
+        error: null,
+      });
+    }
+
+    const status = mcpManager.getServerStatus(id);
+    if (!status) {
+      return c.json({
+        connected: false,
+        toolCount: 0,
+        lastConnected: null,
+        error: null,
+      });
+    }
+
+    return c.json({
+      connected: status.connected,
+      toolCount: status.toolCount,
+      lastConnected: status.lastConnected?.toISOString() ?? null,
+      error: status.error,
+    });
   });
 
   return app;
