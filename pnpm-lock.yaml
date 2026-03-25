@@ -247,6 +247,9 @@ importers:
 
   packages/mcp:
     dependencies:
+      '@gnana/core':
+        specifier: workspace:*
+        version: link:../core
       '@gnana/provider-base':
         specifier: workspace:*
         version: link:../providers/base

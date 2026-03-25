@@ -72,6 +72,7 @@ export interface MCPServerConfig {
   name: string;
   transport: "stdio" | "http";
   command?: string;
+  args?: string[];
   url?: string;
   env?: Record<string, string>;
 }
