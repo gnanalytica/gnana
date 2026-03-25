@@ -17,6 +17,7 @@
     "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\""
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
     "@gnana/connector-github": "workspace:*",
     "@gnana/connector-http": "workspace:*",
     "@gnana/connector-slack": "workspace:*",
@@ -26,11 +27,13 @@
     "@gnana/provider-base": "workspace:*",
     "@gnana/provider-google": "workspace:*",
     "@gnana/provider-openai": "workspace:*",
+    "@google/genai": "^1.0.0",
     "@hono/node-server": "^1.13.0",
     "@sentry/node": "^10.45.0",
     "drizzle-orm": "^0.38.0",
     "hono": "^4.7.0",
     "jose": "^6.2.2",
+    "openai": "^4.77.0",
     "pino": "^10.3.1",
     "postgres": "^3.4.0",
     "node-cron": "^3.0.3",

@@ -54,14 +54,35 @@ export const createConnectorSchema = z.object({
 // ──────────────────────────────────────
 
 export const createProviderSchema = z.object({
-  type: z.enum(["anthropic", "google", "openai"], {
-    message: "Type must be one of: anthropic, google, openai",
+  type: z.enum(["anthropic", "google", "openai", "openrouter"], {
+    message: "Type must be one of: anthropic, google, openai, openrouter",
   }),
   name: z.string().min(1, "Name is required").max(255),
   apiKey: z.string().min(1, "API key is required"),
   baseUrl: z.string().url().optional(),
   config: z.record(z.string(), z.unknown()).optional(),
-  model: z.string().max(255).optional(),
+  isDefault: z.boolean().optional(),
+});
+
+export const updateProviderSchema = z.object({
+  type: z
+    .enum(["anthropic", "google", "openai", "openrouter"], {
+      message: "Type must be one of: anthropic, google, openai, openrouter",
+    })
+    .optional(),
+  name: z.string().min(1, "Name is required").max(255).optional(),
+  apiKey: z.string().min(1, "API key is required").optional(),
+  baseUrl: z.string().url().nullable().optional(),
+  config: z.record(z.string(), z.unknown()).optional(),
+  isDefault: z.boolean().optional(),
+});
+
+export const testProviderSchema = z.object({
+  type: z.enum(["anthropic", "google", "openai", "openrouter"], {
+    message: "Type must be one of: anthropic, google, openai, openrouter",
+  }),
+  apiKey: z.string().min(1, "API key is required"),
+  baseUrl: z.string().url().optional(),
 });
 
 // ──────────────────────────────────────

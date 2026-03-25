@@ -15,6 +15,13 @@
       "when": 1774389365562,
       "tag": "0001_curious_black_tom",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1774450223718,
+      "tag": "0002_motionless_black_queen",
+      "breakpoints": true
     }
   ]
 }
