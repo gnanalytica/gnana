@@ -317,6 +317,15 @@ importers:
 
   packages/server:
     dependencies:
+      '@gnana/connector-github':
+        specifier: workspace:*
+        version: link:../connectors/github
+      '@gnana/connector-http':
+        specifier: workspace:*
+        version: link:../connectors/http
+      '@gnana/connector-slack':
+        specifier: workspace:*
+        version: link:../connectors/slack
       '@gnana/core':
         specifier: workspace:*
         version: link:../core
