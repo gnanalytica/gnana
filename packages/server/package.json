@@ -33,10 +33,12 @@
     "jose": "^6.2.2",
     "pino": "^10.3.1",
     "postgres": "^3.4.0",
+    "node-cron": "^3.0.3",
     "ws": "^8.20.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@types/node-cron": "^3.0.11",
     "@types/ws": "^8.18.1",
     "tsup": "^8.3.0",
     "typescript": "^5.7.0"

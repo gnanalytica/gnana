@@ -15,6 +15,7 @@ import { apiKeyRoutes } from "./routes/api-keys.js";
 import { publicInviteRoutes, protectedInviteRoutes } from "./routes/invites.js";
 import { pipelineVersionRoutes } from "./routes/pipeline-versions.js";
 import { chatRoutes } from "./routes/chat.js";
+import { webhookRoutes } from "./triggers/webhook-route.js";
 import { connectionManager } from "./ws.js";
 import { authMiddleware } from "./middleware/auth.js";
 import { workspaceMiddleware } from "./middleware/workspace.js";
@@ -22,6 +23,7 @@ import { rateLimit } from "./middleware/rate-limit.js";
 import { requestLogger } from "./middleware/request-logger.js";
 import { serverLog, jobLog } from "./logger.js";
 import { JobQueue } from "./job-queue.js";
+import { CronManager } from "./triggers/cron-manager.js";
 import { errorResponse } from "./utils/errors.js";
 
 if (process.env.SENTRY_DSN) {
@@ -44,7 +46,8 @@ export function createGnanaServer(config: GnanaServerConfig) {
   const db = createDatabase(config.database);
   const events = createEventBus();
   const queue = new JobQueue(db);
-  const app = createApp(db, events, queue);
+  const cronManager = new CronManager(db, queue);
+  const app = createApp(db, events, queue, cronManager);
 
   // Bridge event bus to WebSocket connections
   const runEvents = [
@@ -121,9 +124,11 @@ export function createGnanaServer(config: GnanaServerConfig) {
     db,
     events,
     queue,
+    cronManager,
     start() {
       const port = config.port ?? 4000;
       queue.start();
+      cronManager.start();
       const httpServer = serve({ fetch: app.fetch, port }, (info) => {
         serverLog.info(
           { port: info.port },
@@ -160,7 +165,7 @@ function formatLogMessage(eventName: string, payload: Record<string, unknown>): 
   }
 }
 
-function createApp(db: Database, events: EventBus, queue: JobQueue) {
+function createApp(db: Database, events: EventBus, queue: JobQueue, cronManager: CronManager) {
   const app = new Hono();
 
   // Middleware
@@ -197,6 +202,9 @@ function createApp(db: Database, events: EventBus, queue: JobQueue) {
   // Public invite routes — view invite details without auth
   app.route("/api/invites", publicInviteRoutes(db));
 
+  // Public webhook routes — called by external services, no auth required
+  app.route("/api/webhooks", webhookRoutes(db, queue));
+
   // Auth-only routes (no workspace middleware) — accepting invites
   const authOnly = new Hono();
   authOnly.use("*", authMiddleware(db));
@@ -231,7 +239,7 @@ function createApp(db: Database, events: EventBus, queue: JobQueue) {
   api.use("*", rateLimit({ windowMs: 60_000, maxRequests: 100 }));
 
   // Mount route groups
-  api.route("/agents", agentRoutes(db));
+  api.route("/agents", agentRoutes(db, cronManager));
   api.route("/runs", runRoutes(db, events, queue));
   api.route("/connectors", connectorRoutes(db));
   api.route("/providers", providerRoutes(db));
@@ -248,6 +256,7 @@ function createApp(db: Database, events: EventBus, queue: JobQueue) {
 export { createEventBus } from "@gnana/core";
 export { connectionManager } from "./ws.js";
 export { JobQueue } from "./job-queue.js";
+export { CronManager } from "./triggers/cron-manager.js";
 export { errorResponse } from "./utils/errors.js";
 export type { ErrorCode } from "./utils/errors.js";
 export type { GnanaServerConfig as ServerConfig };

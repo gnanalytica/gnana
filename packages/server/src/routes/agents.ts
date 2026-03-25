@@ -5,8 +5,9 @@ import { planLimit } from "../middleware/plan-limits.js";
 import { cacheControl } from "../middleware/cache.js";
 import { createAgentSchema, updateAgentSchema } from "../validation/schemas.js";
 import { errorResponse } from "../utils/errors.js";
+import type { CronManager } from "../triggers/cron-manager.js";
 
-export function agentRoutes(db: Database) {
+export function agentRoutes(db: Database, cronManager?: CronManager) {
   const app = new Hono();
 
   // List agents — viewer+
@@ -113,6 +114,12 @@ export function agentRoutes(db: Database) {
     if (result.length === 0) {
       return errorResponse(c, 404, "NOT_FOUND", "Agent not found");
     }
+
+    // Reload cron schedule if triggers changed
+    if (data.triggersConfig !== undefined && cronManager) {
+      await cronManager.reload(id);
+    }
+
     return c.json(result[0]);
   });
 
