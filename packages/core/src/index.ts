@@ -46,4 +46,8 @@ export { executeDAG, resumeDAG } from "./dag-executor.js";
 export type { DAGNode, DAGEdge, DAGPipeline, DAGContext, DAGRunStore } from "./dag-executor.js";
 
 // Expression evaluator
-export { evaluateExpression, type ExpressionScope, type ExpressionContext, type ExpressionResult } from "./expression-evaluator.js";
+export { evaluateExpression, validateExpression, type ExpressionScope, type ExpressionContext, type ExpressionResult } from "./expression-evaluator.js";
+
+// Dry-run engine
+export { executeDryRun } from "./dag-dry-run.js";
+export type { DryRunOptions, DryRunResult, DryRunNodeResult } from "./dag-dry-run.js";

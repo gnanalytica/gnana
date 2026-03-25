@@ -1,12 +1,13 @@
 import { Hono } from "hono";
-import { eq, and, desc, sql, runs, runLogs, usageRecords, type Database } from "@gnana/db";
-import type { EventBus } from "@gnana/core";
+import { eq, and, desc, sql, runs, runLogs, usageRecords, agents, type Database } from "@gnana/db";
+import type { EventBus, DAGPipeline } from "@gnana/core";
+import { executeDryRun } from "@gnana/core";
 import { requireRole } from "../middleware/rbac.js";
 import { planRunLimit } from "../middleware/plan-limits.js";
 import { rateLimit } from "../middleware/rate-limit.js";
 import { cacheControl } from "../middleware/cache.js";
 import type { JobQueue } from "../job-queue.js";
-import { createRunSchema } from "../validation/schemas.js";
+import { createRunSchema, dryRunSchema } from "../validation/schemas.js";
 import { errorResponse } from "../utils/errors.js";
 
 export function runRoutes(db: Database, events: EventBus, queue?: JobQueue) {
@@ -115,6 +116,56 @@ export function runRoutes(db: Database, events: EventBus, queue?: JobQueue) {
 
       await events.emit("run:queued", { runId: run.id, agentId: run.agentId });
       return c.json(run, 201);
+    },
+  );
+
+  // Dry-run preview — editor+ (30 req/min, no run record created)
+  app.post(
+    "/dry-run",
+    requireRole("editor"),
+    rateLimit({ windowMs: 60_000, maxRequests: 30 }),
+    async (c) => {
+      const workspaceId = c.get("workspaceId");
+      const body = await c.req.json();
+      const parsed = dryRunSchema.safeParse(body);
+      if (!parsed.success) {
+        return c.json(
+          {
+            error: {
+              code: "VALIDATION_ERROR",
+              message: "Validation failed",
+              details: parsed.error.flatten().fieldErrors,
+            },
+          },
+          400,
+        );
+      }
+
+      const data = parsed.data;
+
+      // Fetch the agent's pipeline config
+      const agent = await db
+        .select()
+        .from(agents)
+        .where(and(eq(agents.id, data.agentId), eq(agents.workspaceId, workspaceId)));
+      if (agent.length === 0) {
+        return errorResponse(c, 404, "NOT_FOUND", "Agent not found");
+      }
+
+      const pipeline = agent[0]!.pipelineConfig as DAGPipeline;
+      if (!pipeline?.nodes?.length) {
+        return errorResponse(c, 400, "VALIDATION_ERROR", "Agent has no pipeline configured");
+      }
+
+      const result = executeDryRun({
+        pipeline,
+        triggerData: data.triggerData ?? {},
+        defaultConditionBranch: data.defaultConditionBranch as "true" | "false" | undefined,
+        maxLoopIterations: data.maxLoopIterations,
+        mockData: data.mockData,
+      });
+
+      return c.json(result);
     },
   );
 

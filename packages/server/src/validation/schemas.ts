@@ -37,6 +37,14 @@ export const createRunSchema = z.object({
   payload: z.record(z.string(), z.unknown()).optional(),
 });
 
+export const dryRunSchema = z.object({
+  agentId: z.string().uuid("agentId must be a valid UUID"),
+  triggerData: z.record(z.string(), z.unknown()).optional(),
+  defaultConditionBranch: z.enum(["true", "false"]).optional(),
+  maxLoopIterations: z.number().int().min(1).max(10).optional(),
+  mockData: z.record(z.string(), z.unknown()).optional(),
+});
+
 // ──────────────────────────────────────
 // Connectors
 // ──────────────────────────────────────
