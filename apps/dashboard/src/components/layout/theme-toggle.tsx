@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import { Sun, Moon, Monitor } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -13,8 +14,12 @@ const themeIcons = {
 
 export function ThemeToggle({ isCollapsed }: { isCollapsed: boolean }) {
   const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
 
-  const currentTheme = (theme ?? "system") as (typeof themes)[number];
+  useEffect(() => setMounted(true), []);
+
+  // Always render "system" on server to avoid hydration mismatch
+  const currentTheme = (mounted ? theme ?? "system" : "system") as (typeof themes)[number];
   const Icon = themeIcons[currentTheme] ?? Monitor;
 
   const cycleTheme = () => {

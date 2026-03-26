@@ -13,7 +13,8 @@ export function useAgents() {
     try {
       setIsLoading(true);
       const data = await api.agents.list();
-      setAgents(data as Agent[]);
+      const list = Array.isArray(data) ? data : (data as { data: Agent[] }).data ?? [];
+      setAgents(list as Agent[]);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch agents");

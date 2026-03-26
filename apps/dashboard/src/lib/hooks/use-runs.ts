@@ -13,7 +13,8 @@ export function useRuns(options?: { limit?: number }) {
     try {
       setIsLoading(true);
       const data = await api.runs.list(options);
-      setRuns(data as Run[]);
+      const list = Array.isArray(data) ? data : (data as { data: Run[] }).data ?? [];
+      setRuns(list as Run[]);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch runs");
