@@ -41,6 +41,12 @@ export interface PipelineConfig {
 }
 
 /** Chat message in the onboarding / canvas chat panel */
+export interface QuestionOption {
+  label: string;
+  value: string;
+  description?: string;
+}
+
 export interface ChatMessage {
   id: string;
   role: "user" | "assistant";
@@ -49,6 +55,12 @@ export interface ChatMessage {
   pipelineSpec?: PipelineSpec;
   /** Model's thinking/reasoning process (streamed separately) */
   thinking?: string;
+  /** Structured question options for guided selection */
+  options?: QuestionOption[];
+  /** Allow free-text input alongside options */
+  allowCustom?: boolean;
+  /** Question style */
+  questionType?: "single-select" | "multi-select" | "yes-no" | "text";
 }
 
 /** Template used in chat onboarding */

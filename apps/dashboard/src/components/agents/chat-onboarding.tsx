@@ -111,7 +111,15 @@ export function ChatOnboarding({ onOpenCanvas }: ChatOnboardingProps) {
               accumulatedText += chunk.content;
               setMessages((prev) =>
                 prev.map((m) =>
-                  m.id === streamMsgId ? { ...m, content: m.content + chunk.content } : m,
+                  m.id === streamMsgId
+                    ? {
+                        ...m,
+                        content: chunk.content,
+                        options: chunk.options,
+                        allowCustom: chunk.allowCustom,
+                        questionType: chunk.questionType,
+                      }
+                    : m,
                 ),
               );
               setQuestionCount((prev) => prev + 1);
@@ -183,6 +191,13 @@ export function ChatOnboarding({ onOpenCanvas }: ChatOnboardingProps) {
       }
     },
     [input, isGenerating, questionCount],
+  );
+
+  const handleOptionSelect = useCallback(
+    (optionLabel: string) => {
+      handleSend(optionLabel);
+    },
+    [handleSend],
   );
 
   const handleRetry = useCallback(() => {
@@ -291,6 +306,48 @@ export function ChatOnboarding({ onOpenCanvas }: ChatOnboardingProps) {
                       </details>
                     )}
                     <p className="whitespace-pre-wrap">{msg.content}</p>
+                    {/* Structured question options */}
+                    {msg.options && msg.options.length > 0 && !isGenerating && (
+                      <div className="mt-3 space-y-1.5">
+                        {msg.questionType === "yes-no" ? (
+                          <div className="flex gap-2">
+                            {msg.options.map((opt) => (
+                              <Button
+                                key={opt.value}
+                                variant="outline"
+                                size="sm"
+                                className="flex-1"
+                                onClick={() => handleOptionSelect(opt.label)}
+                              >
+                                {opt.label}
+                              </Button>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="flex flex-wrap gap-1.5">
+                            {msg.options.map((opt) => (
+                              <button
+                                key={opt.value}
+                                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
+                                onClick={() => handleOptionSelect(opt.label)}
+                              >
+                                {opt.label}
+                                {opt.description && (
+                                  <span className="text-muted-foreground font-normal">
+                                    — {opt.description}
+                                  </span>
+                                )}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                        {msg.allowCustom && (
+                          <p className="text-[10px] text-muted-foreground/50 mt-1">
+                            Or type your own answer below
+                          </p>
+                        )}
+                      </div>
+                    )}
                     {isError && (
                       <Button
                         variant="outline"

@@ -51,9 +51,21 @@ interface TextEvent {
   content: string;
 }
 
+interface QuestionOption {
+  label: string;
+  value: string;
+  description?: string;
+}
+
 interface QuestionEvent {
   type: "question";
   content: string;
+  /** Structured options for guided selection. If present, render as clickable choices. */
+  options?: QuestionOption[];
+  /** Allow free-text input alongside options */
+  allowCustom?: boolean;
+  /** Question style hint */
+  questionType?: "single-select" | "multi-select" | "yes-no" | "text";
 }
 
 interface PipelineEvent {
@@ -234,7 +246,7 @@ ${
   forceGenerate
     ? `IMPORTANT: The user has requested you generate a pipeline NOW. Do NOT ask any follow-up questions. Generate your best pipeline based on what you know.`
     : `If the user's request is clear enough to generate a pipeline, generate one immediately.
-If the request is too vague or ambiguous, ask exactly ONE short follow-up question to clarify. Do not ask multiple questions.`
+If the request is too vague or ambiguous, ask exactly ONE follow-up question with structured options for the user to select from. Format questions as guided choices — like a quiz — rather than open-ended text.`
 }
 
 When generating a pipeline:
@@ -281,7 +293,31 @@ ${focusedNodeContext}
 You MUST respond in one of two ways:
 
 ### 1. Follow-up Question (when you need clarification)
-Respond with a natural language question. Keep it short and specific. Ask only ONE question at a time.
+Instead of open-ended questions, provide STRUCTURED questions with selectable options. Format your question as a JSON code block with type "question":
+
+\`\`\`json
+{
+  "type": "question",
+  "content": "Your question text here",
+  "questionType": "single-select",
+  "options": [
+    {"label": "Option A", "value": "option_a", "description": "Brief explanation"},
+    {"label": "Option B", "value": "option_b", "description": "Brief explanation"},
+    {"label": "Option C", "value": "option_c", "description": "Brief explanation"}
+  ],
+  "allowCustom": true
+}
+\`\`\`
+
+Question types:
+- "single-select": Pick one option (e.g., "What should trigger this agent?")
+- "multi-select": Pick multiple (e.g., "Which tools should the agent use?")
+- "yes-no": Simple yes/no decision (e.g., "Should this require human approval?")
+
+Always include 2-5 concrete options based on the context. Set "allowCustom": true to let users type a custom answer if none of the options fit.
+Use connector/provider names from the workspace context when relevant (e.g., suggest "Slack" and "GitHub" if those connectors are available).
+Keep option labels short (2-5 words) and descriptions to one sentence.
+Ask only ONE question at a time.
 
 ### 2. Pipeline Generation/Modification
 Respond with a brief natural language message explaining what you built or changed, followed by the pipeline specification in a JSON code block.
@@ -615,27 +651,56 @@ async function callGoogleStreaming(
 // Response parser: extract pipeline spec from LLM text response
 // ---------------------------------------------------------------------------
 
+interface ParsedQuestion {
+  content: string;
+  options?: QuestionOption[];
+  allowCustom?: boolean;
+  questionType?: "single-select" | "multi-select" | "yes-no" | "text";
+}
+
 interface ParsedResponse {
   textBeforeJson: string;
   pipeline: (PipelineSpec & { suggestions?: string[]; changes?: string[] }) | null;
+  question: ParsedQuestion | null;
 }
 
 function parseAIResponse(fullText: string): ParsedResponse {
   const jsonMatch = fullText.match(/```json\s*([\s\S]*?)\s*```/);
 
   if (!jsonMatch) {
-    return { textBeforeJson: fullText.trim(), pipeline: null };
+    return { textBeforeJson: fullText.trim(), pipeline: null, question: null };
   }
 
   const textBeforeJson = fullText.slice(0, jsonMatch.index).trim();
   try {
-    const parsed = JSON.parse(jsonMatch[1]!) as PipelineSpec & {
-      suggestions?: string[];
-      changes?: string[];
+    const parsed = JSON.parse(jsonMatch[1]!);
+
+    // Check if it's a structured question
+    if (parsed.type === "question" && parsed.content) {
+      return {
+        textBeforeJson,
+        pipeline: null,
+        question: {
+          content: parsed.content,
+          options: parsed.options,
+          allowCustom: parsed.allowCustom,
+          questionType: parsed.questionType,
+        },
+      };
+    }
+
+    // Otherwise it's a pipeline spec
+    return {
+      textBeforeJson,
+      pipeline: parsed as PipelineSpec & { suggestions?: string[]; changes?: string[] },
+      question: null,
     };
-    return { textBeforeJson, pipeline: parsed };
   } catch {
-    return { textBeforeJson: fullText.replace(/```json[\s\S]*?```/g, "").trim(), pipeline: null };
+    return {
+      textBeforeJson: fullText.replace(/```json[\s\S]*?```/g, "").trim(),
+      pipeline: null,
+      question: null,
+    };
   }
 }
 
@@ -775,8 +840,18 @@ export function chatRoutes(db: Database) {
                 }),
               );
             } else {
-              // No pipeline in response — treat as a follow-up question
-              await sendEvent(sseData({ type: "question", content: parsed.textBeforeJson }));
+              // No pipeline — check for structured question or plain text question
+              if (parsed.question) {
+                await sendEvent(sseData({
+                  type: "question",
+                  content: parsed.question.content,
+                  options: parsed.question.options,
+                  allowCustom: parsed.question.allowCustom,
+                  questionType: parsed.question.questionType,
+                }));
+              } else {
+                await sendEvent(sseData({ type: "question", content: parsed.textBeforeJson }));
+              }
             }
           }
         } else if (resolvedProvider.type === "google") {
@@ -811,6 +886,14 @@ export function chatRoutes(db: Database) {
                 changes,
               }),
             );
+          } else if (parsed.question) {
+            await sendEvent(sseData({
+              type: "question",
+              content: parsed.question.content,
+              options: parsed.question.options,
+              allowCustom: parsed.question.allowCustom,
+              questionType: parsed.question.questionType,
+            }));
           } else if (parsed.textBeforeJson && !fullText.includes("```json")) {
             await sendEvent(sseData({ type: "question", content: parsed.textBeforeJson }));
           }
@@ -865,8 +948,16 @@ export function chatRoutes(db: Database) {
                 changes,
               }),
             );
+          } else if (parsed.question) {
+            await sendEvent(sseData({
+              type: "question",
+              content: parsed.question.content,
+              options: parsed.question.options,
+              allowCustom: parsed.question.allowCustom,
+              questionType: parsed.question.questionType,
+            }));
           } else if (fullText.trim()) {
-            // Text-only response — it's a follow-up question
+            // Text-only response — plain follow-up question
             await sendEvent(sseData({ type: "question", content: parsed.textBeforeJson }));
           }
         }

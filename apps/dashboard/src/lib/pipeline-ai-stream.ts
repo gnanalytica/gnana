@@ -1,10 +1,22 @@
 import type { PipelineSpec } from "@/types/pipeline";
 
+export interface QuestionOption {
+  label: string;
+  value: string;
+  description?: string;
+}
+
 export type StreamChunk =
   | { type: "text"; content: string }
   | { type: "thinking"; content: string }
   | { type: "thinking_complete"; content: string }
-  | { type: "question"; content: string }
+  | {
+      type: "question";
+      content: string;
+      options?: QuestionOption[];
+      allowCustom?: boolean;
+      questionType?: "single-select" | "multi-select" | "yes-no" | "text";
+    }
   | {
       type: "pipeline";
       spec: PipelineSpec;
