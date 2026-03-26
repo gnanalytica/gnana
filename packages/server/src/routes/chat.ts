@@ -347,6 +347,18 @@ async function resolveProvider(
     };
   }
 
+  // Fallback to individual provider env vars
+  const envFallbacks: [string, string | undefined][] = [
+    ["anthropic", process.env.ANTHROPIC_API_KEY],
+    ["google", process.env.GOOGLE_AI_KEY],
+    ["openai", process.env.OPENAI_API_KEY],
+  ];
+  for (const [type, key] of envFallbacks) {
+    if (key) {
+      return { type, apiKey: key, baseUrl: null };
+    }
+  }
+
   return null;
 }
 
