@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Hexagon, Send, Loader2, RotateCcw, AlertCircle, ChevronDown, Brain, Zap, MessageSquare } from "lucide-react";
+import { Hexagon, Send, Loader2, RotateCcw, AlertCircle, ChevronDown, Brain, Zap, MessageSquare, Check } from "lucide-react";
 import { TemplateGrid } from "./template-grid";
 import { PipelineSummaryCard } from "./pipeline-summary-card";
+import { PipelineMiniPreview } from "./pipeline-mini-preview";
 import type { PipelineSpec, ChatMessage } from "@/types/pipeline";
 import { streamPipelineResponse } from "@/lib/pipeline-ai-stream";
 
@@ -131,6 +132,106 @@ function findLastIndex<T>(arr: T[], predicate: (item: T) => boolean): number {
     if (item !== undefined && predicate(item)) return i;
   }
   return -1;
+}
+
+/** Determine the active step index for the progress stepper */
+function getActiveStep(
+  questionCount: number,
+  isGenerating: boolean,
+  generatedSpec: PipelineSpec | null,
+): number {
+  if (generatedSpec) return 3; // Review
+  if (isGenerating && questionCount >= 2) return 2; // Generate
+  if (questionCount > 0) return 1; // Configure
+  return 0; // Describe
+}
+
+const STEPPER_STEPS = ["Describe", "Configure", "Generate", "Review"] as const;
+
+/** Compact progress stepper bar */
+function ProgressStepper({
+  questionCount,
+  isGenerating,
+  generatedSpec,
+}: {
+  questionCount: number;
+  isGenerating: boolean;
+  generatedSpec: PipelineSpec | null;
+}) {
+  const activeStep = getActiveStep(questionCount, isGenerating, generatedSpec);
+
+  return (
+    <div className="flex items-center justify-center gap-0 w-full max-w-md mx-auto h-10 mb-3">
+      {STEPPER_STEPS.map((label, i) => {
+        const isCompleted = i < activeStep;
+        const isActive = i === activeStep;
+
+        return (
+          <div key={label} className="flex items-center">
+            {/* Step circle + label */}
+            <div className="flex flex-col items-center gap-0.5">
+              <div
+                className={`flex items-center justify-center h-6 w-6 rounded-full text-[10px] font-bold transition-colors ${
+                  isCompleted
+                    ? "bg-green-500 text-white"
+                    : isActive
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground"
+                }`}
+              >
+                {isCompleted ? <Check className="h-3.5 w-3.5" /> : i + 1}
+              </div>
+              <span
+                className={`text-[10px] leading-none ${
+                  isActive ? "text-foreground font-semibold" : "text-muted-foreground"
+                }`}
+              >
+                {label}
+              </span>
+            </div>
+            {/* Connecting line */}
+            {i < STEPPER_STEPS.length - 1 && (
+              <div
+                className={`w-8 sm:w-12 h-px mx-1 mt-[-10px] ${
+                  isCompleted ? "bg-green-500" : "border-t border-dashed border-muted-foreground/30"
+                }`}
+              />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Generate contextual quick-reply suggestions based on conversation state */
+function getQuickReplies(
+  msg: ChatMessage,
+  msgIndex: number,
+  messages: ChatMessage[],
+  generatedSpec: PipelineSpec | null,
+  questionCount: number,
+): string[] {
+  // Only show for the last assistant message
+  if (msgIndex !== messages.length - 1) return [];
+  if (msg.role !== "assistant") return [];
+
+  // After pipeline is generated
+  if (generatedSpec || msg.pipelineSpec) {
+    return ["Add error handling", "Add approval step", "Looks good!"];
+  }
+
+  // After expertise level selection (first question answered, questionCount is 1)
+  if (questionCount <= 1 && messages.length <= 3) {
+    return ["Let's start building!", "Show me templates"];
+  }
+
+  // After a question is answered (mid-conversation)
+  if (questionCount > 0 && !generatedSpec) {
+    return ["Generate pipeline now", "Ask me another question"];
+  }
+
+  return [];
 }
 
 interface ChatOnboardingProps {
@@ -361,7 +462,9 @@ export function ChatOnboarding({ onOpenCanvas }: ChatOnboardingProps) {
     questionCount >= 2 && !generatedSpec && isGenerating ? "Almost ready..." : null;
 
   return (
-    <div className="flex flex-col items-center justify-center h-full max-w-2xl mx-auto px-4">
+    <div className={`flex h-full ${generatedSpec ? "gap-4" : ""} px-4`}>
+      {/* Main chat column */}
+      <div className={`flex flex-col items-center justify-center h-full ${generatedSpec ? "flex-1 min-w-0" : "max-w-2xl mx-auto w-full"}`}>
       {/* Header -- only when no messages */}
       {messages.length === 0 && (
         <div className="flex flex-col items-center gap-4 mb-8">
@@ -371,6 +474,15 @@ export function ChatOnboarding({ onOpenCanvas }: ChatOnboardingProps) {
             Describe what you want your agent to do and I&apos;ll build it for you.
           </p>
         </div>
+      )}
+
+      {/* Progress stepper — visible once the conversation starts */}
+      {messages.length > 0 && (
+        <ProgressStepper
+          questionCount={questionCount}
+          isGenerating={isGenerating}
+          generatedSpec={generatedSpec}
+        />
       )}
 
       {/* Template grid */}
@@ -485,6 +597,24 @@ export function ChatOnboarding({ onOpenCanvas }: ChatOnboardingProps) {
                         />
                       </div>
                     )}
+                    {/* Quick-reply suggestion chips — last assistant message only */}
+                    {!isGenerating && (() => {
+                      const quickReplies = getQuickReplies(msg, msgIndex, messages, generatedSpec, questionCount);
+                      if (quickReplies.length === 0) return null;
+                      return (
+                        <div className="flex flex-wrap gap-1.5 mt-3 pt-2 border-t border-border/30">
+                          {quickReplies.map((reply) => (
+                            <button
+                              key={reply}
+                              onClick={() => handleSend(reply)}
+                              className="inline-flex items-center rounded-full border border-primary/30 bg-background px-3 py-1 text-xs font-medium text-primary hover:bg-primary/10 hover:border-primary/50 transition-colors"
+                            >
+                              {reply}
+                            </button>
+                          ))}
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               );
@@ -552,6 +682,27 @@ export function ChatOnboarding({ onOpenCanvas }: ChatOnboardingProps) {
           <Send className="h-4 w-4" />
         </Button>
       </div>
+      </div>
+
+      {/* Pipeline mini-preview — sticky right panel on desktop */}
+      {generatedSpec && (
+        <div className="hidden lg:block w-[320px] shrink-0 sticky top-4 self-start">
+          <PipelineMiniPreview
+            spec={generatedSpec}
+            onOpenCanvas={() => onOpenCanvas(generatedSpec)}
+          />
+        </div>
+      )}
+
+      {/* Pipeline mini-preview — mobile: fixed at bottom */}
+      {generatedSpec && (
+        <div className="lg:hidden fixed bottom-20 left-4 right-4 z-10">
+          <PipelineMiniPreview
+            spec={generatedSpec}
+            onOpenCanvas={() => onOpenCanvas(generatedSpec)}
+          />
+        </div>
+      )}
     </div>
   );
 }
