@@ -632,6 +632,12 @@ async function callGoogleStreaming(
 
   if (!res.ok) {
     const errorBody = await res.text();
+    if (res.status === 429) {
+      // Extract retry delay if available
+      const retryMatch = errorBody.match(/retry in (\d+(?:\.\d+)?)/i);
+      const retrySecs = retryMatch ? Math.ceil(Number(retryMatch[1])) : 15;
+      throw new Error(`Rate limit reached. Please wait ${retrySecs} seconds and try again.`);
+    }
     throw new Error(`Google API error (${res.status}): ${errorBody}`);
   }
 

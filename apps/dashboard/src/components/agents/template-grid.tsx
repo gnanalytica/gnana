@@ -22,51 +22,42 @@ const NODE_COLORS: Record<MiniNodeType, string> = {
 
 /** Mini pipeline diagram rendered as colored dots connected by lines */
 function MiniPipelinePreview({ nodes }: { nodes: readonly MiniNode[] }) {
-  const dotSize = 10;
-  const gap = 28;
-  const totalWidth = nodes.length * dotSize + (nodes.length - 1) * gap;
-  const svgWidth = Math.max(totalWidth + 20, 150);
-  const svgHeight = 32;
-  const startX = (svgWidth - totalWidth) / 2;
+  const dotR = 4;
+  const padding = 12;
+  const n = nodes.length;
+  if (n === 0) return null;
+
+  // Fixed viewBox width — dots space evenly inside
+  const vbW = 140;
+  const vbH = 24;
+  const spacing = n > 1 ? (vbW - padding * 2) / (n - 1) : 0;
 
   return (
-    <svg width={svgWidth} height={svgHeight} className="mx-auto" aria-hidden="true">
+    <svg
+      viewBox={`0 0 ${vbW} ${vbH}`}
+      className="w-full max-w-[140px] h-[24px] mx-auto"
+      aria-hidden="true"
+    >
       {nodes.map((node, i) => {
-        const cx = startX + i * (dotSize + gap) + dotSize / 2;
-        const cy = svgHeight / 2;
-        const nextCx = startX + (i + 1) * (dotSize + gap) + dotSize / 2;
+        const cx = padding + i * spacing;
+        const cy = vbH / 2;
         const color = NODE_COLORS[node.type];
 
         return (
           <g key={i}>
-            {/* Connecting line to next node */}
-            {i < nodes.length - 1 && (
+            {i < n - 1 && (
               <line
-                x1={cx + dotSize / 2 + 1}
+                x1={cx + dotR + 1}
                 y1={cy}
-                x2={nextCx - dotSize / 2 - 1}
+                x2={padding + (i + 1) * spacing - dotR - 1}
                 y2={cy}
                 stroke={color}
                 strokeWidth={1.5}
-                strokeOpacity={0.5}
+                strokeOpacity={0.4}
               />
             )}
-            {/* Dot */}
-            <circle
-              cx={cx}
-              cy={cy}
-              r={dotSize / 2}
-              fill={color}
-              opacity={0.9}
-            />
-            {/* Glow effect */}
-            <circle
-              cx={cx}
-              cy={cy}
-              r={dotSize / 2 + 2}
-              fill={color}
-              opacity={0.15}
-            />
+            <circle cx={cx} cy={cy} r={dotR + 2} fill={color} opacity={0.12} />
+            <circle cx={cx} cy={cy} r={dotR} fill={color} opacity={0.9} />
           </g>
         );
       })}
@@ -179,9 +170,9 @@ export function TemplateGrid({ onSelect }: TemplateGridProps) {
             <CardContent className="flex flex-col items-center text-center gap-2 p-4">
               {/* Mini pipeline preview or custom "+" icon */}
               {isCustom ? (
-                <div className="flex items-center justify-center h-[32px] w-[150px]">
-                  <div className="flex items-center justify-center h-8 w-8 rounded-full border-2 border-dashed border-muted-foreground/40">
-                    <Plus className="h-4 w-4 text-muted-foreground/60" />
+                <div className="flex items-center justify-center h-[24px] w-full max-w-[140px] mx-auto">
+                  <div className="flex items-center justify-center h-7 w-7 rounded-full border-2 border-dashed border-muted-foreground/40">
+                    <Plus className="h-3.5 w-3.5 text-muted-foreground/60" />
                   </div>
                 </div>
               ) : (
